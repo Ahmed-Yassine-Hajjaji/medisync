@@ -34,7 +34,7 @@ import { Review } from '../../../core/models/consultation.model';
                 <span>🗣️ {{ medecin.languesParlees }}</span>
               }
               @if (medecin.tarifConsultation) {
-                <span>💶 {{ medecin.tarifConsultation }} EUR</span>
+                <span>💰 {{ medecin.tarifConsultation }} DH</span>
               }
               @if (medecin.dureeConsultation) {
                 <span>⏱️ {{ medecin.dureeConsultation }} min</span>

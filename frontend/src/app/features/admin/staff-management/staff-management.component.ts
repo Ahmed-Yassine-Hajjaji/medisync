@@ -146,7 +146,7 @@ interface StaffMember {
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Tarif consultation (EUR)</label>
+                    <label>Tarif consultation (DH)</label>
                     <input type="number" formControlName="tarifConsultation">
                   </div>
                   <div class="form-group">

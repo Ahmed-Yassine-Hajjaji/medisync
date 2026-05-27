@@ -49,7 +49,7 @@ import { Medecin } from '../../../core/models/user.model';
                 </div>
               }
               @if (medecin.tarifConsultation) {
-                <div class="tarif">{{ medecin.tarifConsultation }} EUR</div>
+                <div class="tarif">{{ medecin.tarifConsultation }} DH</div>
               }
             </div>
             <a [routerLink]="['/medecins', medecin.id]" class="btn btn-primary">Voir profil</a>

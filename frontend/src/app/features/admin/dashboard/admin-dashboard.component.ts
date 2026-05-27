@@ -39,9 +39,9 @@ import { Patient, Medecin } from '../../../core/models/user.model';
           </div>
         </div>
         <div class="stat-card card">
-          <div class="stat-icon">💶</div>
+          <div class="stat-icon">💰</div>
           <div class="stat-info">
-            <div class="stat-value">{{ stats?.revenueMonth || 0 }} EUR</div>
+            <div class="stat-value">{{ stats?.revenueMonth || 0 }} DH</div>
             <div class="stat-label">Revenu du mois</div>
           </div>
         </div>

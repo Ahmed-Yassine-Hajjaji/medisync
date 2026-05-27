@@ -48,28 +48,28 @@ interface RevenueByDoctor {
           <div class="kpi-icon">&#128176;</div>
           <div class="kpi-content">
             <span class="kpi-label">Chiffre d'affaires</span>
-            <span class="kpi-value">{{ stats.totalRevenue | number:'1.2-2' }} EUR</span>
+            <span class="kpi-value">{{ stats.totalRevenue | number:'1.2-2' }} DH</span>
           </div>
         </div>
         <div class="kpi-card paid">
           <div class="kpi-icon">&#9989;</div>
           <div class="kpi-content">
             <span class="kpi-label">Paye</span>
-            <span class="kpi-value">{{ stats.totalPaid | number:'1.2-2' }} EUR</span>
+            <span class="kpi-value">{{ stats.totalPaid | number:'1.2-2' }} DH</span>
           </div>
         </div>
         <div class="kpi-card pending">
           <div class="kpi-icon">&#9203;</div>
           <div class="kpi-content">
             <span class="kpi-label">En attente</span>
-            <span class="kpi-value">{{ stats.totalPending | number:'1.2-2' }} EUR</span>
+            <span class="kpi-value">{{ stats.totalPending | number:'1.2-2' }} DH</span>
           </div>
         </div>
         <div class="kpi-card overdue">
           <div class="kpi-icon">&#9888;</div>
           <div class="kpi-content">
             <span class="kpi-label">Impaye</span>
-            <span class="kpi-value">{{ stats.totalOverdue | number:'1.2-2' }} EUR</span>
+            <span class="kpi-value">{{ stats.totalOverdue | number:'1.2-2' }} DH</span>
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@ interface RevenueByDoctor {
           <span class="stat-label">Consultations</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">{{ averageTicket | number:'1.0-0' }} EUR</span>
+          <span class="stat-value">{{ averageTicket | number:'1.0-0' }} DH</span>
           <span class="stat-label">Panier moyen</span>
         </div>
         <div class="stat-item">
@@ -106,7 +106,7 @@ interface RevenueByDoctor {
                 <div class="bar-container">
                   <div class="bar" [style.width.%]="getBarWidth(item.value)"></div>
                 </div>
-                <span class="bar-value">{{ item.value | number:'1.0-0' }} EUR</span>
+                <span class="bar-value">{{ item.value | number:'1.0-0' }} DH</span>
               </div>
             }
           </div>
@@ -125,7 +125,7 @@ interface RevenueByDoctor {
                     <div class="progress" [style.width.%]="getDoctorPercent(doc.value)"></div>
                   </div>
                 </div>
-                <span class="doctor-value">{{ doc.value | number:'1.0-0' }} EUR</span>
+                <span class="doctor-value">{{ doc.value | number:'1.0-0' }} DH</span>
               </div>
             }
           </div>
@@ -152,7 +152,7 @@ interface RevenueByDoctor {
                 <td>{{ invoice.numeroFacture }}</td>
                 <td>{{ invoice.patientNom }}</td>
                 <td>{{ invoice.dateFacture | date:'dd/MM/yyyy' }}</td>
-                <td>{{ invoice.montantTotal | number:'1.2-2' }} EUR</td>
+                <td>{{ invoice.montantTotal | number:'1.2-2' }} DH</td>
                 <td>
                   <span class="status-badge" [class]="invoice.statut.toLowerCase()">
                     {{ getStatusLabel(invoice.statut) }}
