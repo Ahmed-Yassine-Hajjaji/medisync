@@ -44,6 +44,9 @@ public class User {
 
     private String twoFactorSecret;
 
+    @Column(length = 500)
+    private String fcmToken;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

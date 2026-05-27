@@ -27,4 +27,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.medecin.id = :medecinId AND a.statut = 'NO_SHOW'")
     Long countNoShowByMedecin(Long medecinId);
+
+    @Query("SELECT a FROM Appointment a WHERE " +
+           "CAST(CONCAT(a.date, ' ', a.heureDebut) AS timestamp) BETWEEN :startDateTime AND :endDateTime " +
+           "AND a.statut = :statut")
+    List<Appointment> findAppointmentsForReminder(LocalDateTime startDateTime, LocalDateTime endDateTime, String statut);
+
+    List<Appointment> findByDateAndStatut(LocalDate date, String statut);
 }
