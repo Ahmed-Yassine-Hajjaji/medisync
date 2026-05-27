@@ -4,6 +4,7 @@ import com.medisync.entity.Patient;
 import com.medisync.entity.Role;
 import com.medisync.entity.User;
 import com.medisync.repository.UserRepository;
+import com.medisync.security.UserDetailsImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,7 +48,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .orElseGet(() -> createNewPatientFromOAuth(email, firstName, lastName, googleId));
 
         // Generate JWT token
-        String token = jwtService.generateToken(user);
+        UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+        String token = jwtService.generateToken(userDetails);
 
         // Redirect to frontend with token
         String redirectUrl = String.format("%s/oauth/callback?token=%s", appUrl, token);
@@ -62,7 +64,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         patient.setPassword(UUID.randomUUID().toString()); // Random password since they use OAuth
         patient.setRole(Role.PATIENT);
         patient.setEnabled(true);
-        patient.setNumeroSecu(""); // To be filled later
+        patient.setNumeroSecuriteSociale(""); // To be filled later
 
         log.info("Creating new patient from OAuth: {}", email);
         return userRepository.save(patient);

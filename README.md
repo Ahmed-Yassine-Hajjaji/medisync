@@ -1,153 +1,222 @@
 # MediSync - Systeme de Gestion de Clinique Medicale
 
-## Description
-Application web et mobile pour la gestion d'une clinique medicale multi-praticiens.
+Application web et mobile complete pour la gestion d'une clinique medicale multi-praticiens.
+
+## Stack Technologique
+
+| Composant | Technologies |
+|-----------|-------------|
+| **Backend** | Spring Boot 3.2, Java 17, Spring Security, JWT, OAuth2 |
+| **Frontend** | Angular 17 (Standalone Components), TypeScript, Leaflet |
+| **Mobile** | Flutter 3.x, Provider, Firebase Messaging |
+| **Base de donnees** | PostgreSQL (Supabase) |
+| **Stockage** | Supabase Storage (S3 compatible) |
+| **Emails** | Resend API |
+| **Notifications** | Firebase Cloud Messaging (FCM) |
+
+## Fonctionnalites
+
+### Authentification & Securite
+- Inscription/Connexion par email
+- OAuth2 Google (SSO)
+- Authentification 2FA (TOTP)
+- Tokens JWT avec expiration
+- Gestion des roles (Patient, Medecin, Secretaire, Admin)
+
+### Module Patient
+- Recherche de medecins par specialite/localisation
+- Prise de rendez-vous en temps reel
+- Visualisation des creneaux disponibles
+- Historique des consultations
+- Documents medicaux (upload/download)
+- Notifications de rappel (email + push)
+
+### Module Medecin
+- Agenda interactif
+- Gestion des disponibilites
+- Dossier patient complet
+- Redaction de consultations
+- Prescriptions electroniques
+- Statistiques personnelles
+
+### Module Secretaire
+- Gestion des patients
+- Prise de RDV pour patients
+- Confirmation/Annulation de RDV
+- Facturation et encaissements
+
+### Module Administrateur
+- Dashboard avec KPIs
+- Gestion des utilisateurs
+- Gestion des medecins et specialites
+- Rapports financiers avec graphiques
+- Export PDF des rapports
+
+### Application Mobile (Flutter)
+- Interface patient optimisee
+- Authentification biometrique
+- Geolocalisation des cliniques
+- Notifications push (Firebase)
+- Mode hors ligne partiel
 
 ## Architecture
-- **Backend**: Spring Boot 3.2 (API REST + JWT + H2/MySQL)
-- **Frontend Web**: Angular 17 (Standalone Components)
-- **Mobile**: Flutter 3.x (Android/iOS)
 
-## Acteurs
-| Acteur | Description |
-|--------|-------------|
-| Patient | Prise de RDV, consultation dossier medical, suivi traitements |
-| Medecin | Gestion planning, consultations, prescriptions |
-| Secretaire | Gestion RDV, accueil patients, facturation |
-| Administrateur | Pilotage etablissement, stats, gestion utilisateurs |
-
-## Structure du projet
 ```
 medisync/
-├── backend/                    # API Spring Boot
+├── backend/                     # API REST Spring Boot
 │   └── src/main/java/com/medisync/
-│       ├── config/            # Configuration (Security, CORS)
-│       ├── controller/        # REST Controllers
-│       ├── dto/               # Data Transfer Objects
-│       ├── entity/            # Entites JPA
-│       ├── repository/        # Repositories Spring Data
-│       ├── security/          # JWT, Authentication
-│       └── service/           # Services metier
-├── frontend/                   # Application Angular
+│       ├── config/             # Security, CORS, Firebase
+│       ├── controller/         # REST Controllers
+│       ├── dto/                # Data Transfer Objects
+│       ├── entity/             # Entites JPA (User, Patient, Medecin...)
+│       ├── repository/         # Spring Data JPA
+│       ├── security/           # JWT, OAuth2, UserDetails
+│       └── service/            # Logique metier, Scheduler
+├── frontend/                    # Application Angular 17
 │   └── src/app/
-│       ├── core/              # Services, Guards, Models
-│       ├── features/          # Modules par role (patient, medecin...)
-│       └── shared/            # Composants partages
-└── mobile/                     # Application Flutter
-    └── lib/
-        ├── models/            # Modeles de donnees
-        ├── screens/           # Ecrans de l'app
-        └── services/          # Services API
+│       ├── core/               # Services, Guards, Interceptors
+│       ├── features/           # Modules par role
+│       │   ├── patient/        # Dashboard, RDV, Documents
+│       │   ├── medecin/        # Agenda, Consultations
+│       │   ├── secretaire/     # Gestion patients/RDV
+│       │   └── admin/          # Dashboard, Rapports
+│       └── shared/             # Composants reutilisables
+├── mobile/                      # Application Flutter
+│   └── lib/
+│       ├── models/             # Modeles Dart
+│       ├── providers/          # State management
+│       ├── screens/            # Ecrans UI
+│       └── services/           # API, Auth, Notifications
+└── docs/                        # Documentation
+    ├── README-technique.md     # Documentation technique
+    └── DEMO-GUIDE.md           # Guide de demonstration
 ```
 
-## Installation et Lancement
+## Installation
 
 ### Pre-requis
 - Java 17+
 - Node.js 18+
 - Flutter 3.x
-- Maven
+- Maven 3.8+
 
-### Backend
-```bash
-cd backend
-./mvnw spring-boot:run
+### Configuration
+
+1. **Variables d'environnement** - Creer un fichier `.env` dans `backend/`:
+```env
+# Base de donnees Supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+DATABASE_URL=jdbc:postgresql://...
+
+# JWT
+JWT_SECRET=your_secret_key
+JWT_EXPIRATION=86400000
+
+# OAuth2 Google
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+
+# Resend (Emails)
+RESEND_API_KEY=your_resend_key
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+
+# Supabase Storage
+SUPABASE_STORAGE_URL=your_storage_url
 ```
-L'API demarre sur http://localhost:8080
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- H2 Console: http://localhost:8080/h2-console
 
-### Frontend Angular
+2. **Firebase** - Placer `firebase-service-account.json` dans `backend/src/main/resources/`
+
+### Demarrage
+
 ```bash
+# Backend (Terminal 1)
+cd backend
+mvn spring-boot:run
+# API: http://localhost:8080
+# Swagger: http://localhost:8080/swagger-ui.html
+
+# Frontend (Terminal 2)
 cd frontend
 npm install
 ng serve
-```
-L'application demarre sur http://localhost:4200
+# App: http://localhost:4200
 
-### Mobile Flutter
-```bash
+# Mobile (Terminal 3)
 cd mobile
 flutter pub get
 flutter run
 ```
 
-## Configuration
-
-### Variables d'environnement
-Copier le fichier `application.properties.example` vers `application.properties` et configurer:
-- Base de donnees
-- Serveur SMTP pour les emails
-- Cle secrete JWT
-
-Les comptes de demonstration sont crees automatiquement au premier lancement (voir `DataInitializer.java`).
-
-## Fonctionnalites principales
-
-### Patient
-- Inscription/connexion (email, OAuth)
-- Recherche medecins (specialite, disponibilite)
-- Prise de RDV en temps reel
-- Consultation dossier medical
-- Historique ordonnances (PDF)
-- Notifications rappels
-
-### Medecin
-- Gestion planning (disponibilites, conges)
-- Liste patients du jour
-- Redaction comptes rendus
-- Prescriptions electroniques
-- Consultation dossier patient
-
-### Secretaire
-- Recherche/creation patients
-- Prise de RDV pour patients
-- Confirmation/annulation RDV
-- Facturation
-- Encaissements
-
-### Administrateur
-- Tableau de bord (KPIs)
-- Gestion medecins/secretaires
-- Gestion cliniques
-- Rapports financiers
-- Audit des acces
-
 ## API Endpoints
 
+### Authentification
 | Methode | Endpoint | Description |
 |---------|----------|-------------|
-| POST | /api/auth/register | Inscription patient |
-| POST | /api/auth/login | Connexion |
-| GET | /api/public/medecins | Liste medecins |
-| GET | /api/public/medecins/{id}/creneaux | Creneaux disponibles |
-| GET | /api/patient/appointments | Mes RDV |
-| POST | /api/patient/appointments | Creer RDV |
-| GET | /api/medecin/appointments | RDV du medecin |
-| POST | /api/medecin/consultations/{aptId} | Creer consultation |
-| GET | /api/admin/dashboard | Stats admin |
+| POST | `/api/auth/register` | Inscription patient |
+| POST | `/api/auth/login` | Connexion (retourne JWT) |
+| POST | `/api/auth/2fa/setup` | Configuration 2FA |
+| GET | `/oauth2/authorization/google` | OAuth2 Google |
 
-## Technologies
+### Patient
+| Methode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/patient/profile` | Profil patient |
+| GET | `/api/patient/appointments` | Mes rendez-vous |
+| POST | `/api/patient/appointments` | Creer un RDV |
+| DELETE | `/api/patient/appointments/{id}` | Annuler un RDV |
+| GET | `/api/patient/documents` | Mes documents |
+| POST | `/api/patient/documents/upload` | Upload document |
 
-### Backend
-- Spring Boot 3.2
-- Spring Security + JWT
-- Spring Data JPA
-- H2 (dev) / MySQL (prod)
-- Lombok, MapStruct
-- SpringDoc OpenAPI
+### Medecin
+| Methode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/medecin/appointments` | Agenda du medecin |
+| GET | `/api/medecin/patients` | Liste des patients |
+| POST | `/api/medecin/consultations` | Creer consultation |
+| GET | `/api/medecin/disponibilites` | Mes disponibilites |
+| POST | `/api/medecin/disponibilites` | Ajouter disponibilite |
 
-### Frontend
-- Angular 17
-- Standalone Components
-- RxJS
-- SCSS
+### Public
+| Methode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/public/medecins` | Liste des medecins |
+| GET | `/api/public/medecins/{id}/creneaux` | Creneaux disponibles |
+| GET | `/api/public/specialites` | Liste des specialites |
 
-### Mobile
-- Flutter 3.x
-- Provider (state management)
-- HTTP package
-- Shared Preferences
+### Admin
+| Methode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/admin/dashboard` | Statistiques globales |
+| GET | `/api/admin/users` | Gestion utilisateurs |
+| GET | `/api/admin/reports/financial` | Rapports financiers |
+
+## Services Externes
+
+| Service | Utilisation |
+|---------|-------------|
+| **Supabase** | Base PostgreSQL + Stockage fichiers |
+| **Resend** | Emails transactionnels (confirmations, rappels) |
+| **Firebase FCM** | Notifications push mobile |
+| **Google OAuth2** | Connexion SSO |
+
+## Rappels Automatiques
+
+Le systeme envoie automatiquement des rappels de RDV:
+- **24h avant** - Email + Push notification
+- **1h avant** - Email + Push notification
+- **Le matin meme** - Email + Push notification (7h00)
+
+## Documentation
+
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **Documentation technique**: `docs/README-technique.md`
+- **Guide de demo**: `docs/DEMO-GUIDE.md`
 
 ## Licence
-Projet academique - Developpement Web & Mobile
+
+Projet academique - Developpement Web & Mobile 2024-2026
+
+---
+
+*Developpe avec Spring Boot, Angular, et Flutter*

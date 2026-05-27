@@ -85,7 +85,7 @@ public class EmailService {
         sendEmail(appointment.getPatient().getEmail(), subject, html);
     }
 
-    private void sendEmail(String to, String subject, String html) {
+    public void sendEmail(String to, String subject, String html) {
         String json = String.format(
             "{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
             fromEmail,
