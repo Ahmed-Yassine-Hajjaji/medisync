@@ -14,6 +14,14 @@ export const PATIENT_ROUTES: Routes = [
     loadComponent: () => import('./consultations/patient-consultations.component').then(m => m.PatientConsultationsComponent)
   },
   {
+    path: 'medical-record',
+    loadComponent: () => import('./medical-record/medical-record.component').then(m => m.MedicalRecordComponent)
+  },
+  {
+    path: 'prescriptions',
+    loadComponent: () => import('./prescriptions/prescriptions.component').then(m => m.PrescriptionsComponent)
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./profile/patient-profile.component').then(m => m.PatientProfileComponent)
   }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import '../models/consultation.dart';
 import 'auth_service.dart';
 
 class ApiService {
@@ -91,6 +92,57 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to cancel appointment');
+    }
+  }
+
+  // Consultations
+  Future<List<Consultation>> getMyConsultations() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/consultations'),
+      headers: authService.authHeaders,
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Consultation.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load consultations');
+  }
+
+  Future<Consultation> getConsultationById(int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/consultations/$id'),
+      headers: authService.authHeaders,
+    );
+
+    if (response.statusCode == 200) {
+      return Consultation.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to load consultation');
+  }
+
+  // Prescriptions
+  Future<List<Prescription>> getMyPrescriptions() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/prescriptions'),
+      headers: authService.authHeaders,
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Prescription.fromJson(json)).toList();
+    }
+    throw Exception('Failed to load prescriptions');
+  }
+
+  Future<void> requestPrescriptionRenewal(int prescriptionId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/patient/prescriptions/$prescriptionId/renewal'),
+      headers: authService.authHeaders,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to request renewal');
     }
   }
 }
