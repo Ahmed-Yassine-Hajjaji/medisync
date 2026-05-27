@@ -22,6 +22,53 @@ export class AuthService {
     private router: Router
   ) {
     this.loadStoredUser();
+    this.handleOAuthCallback();
+  }
+
+  /**
+   * Handle OAuth2 callback - captures token from URL after Google redirect
+   */
+  private handleOAuthCallback(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+      // Fetch user info with the token
+      this.http.get<AuthResponse>(`${this.apiUrl}/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).subscribe({
+        next: (userInfo) => {
+          const authResponse: AuthResponse = {
+            ...userInfo,
+            token: token
+          };
+          this.setCurrentUser(authResponse);
+
+          // Clean URL and redirect
+          window.history.replaceState({}, document.title, window.location.pathname);
+          this.redirectToDashboard();
+        },
+        error: () => {
+          // If /me fails, try to decode token and create minimal user
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const authResponse: AuthResponse = {
+              token: token,
+              id: payload.id || 0,
+              email: payload.sub || payload.email || '',
+              nom: payload.nom || '',
+              prenom: payload.prenom || '',
+              role: payload.role || 'PATIENT'
+            };
+            this.setCurrentUser(authResponse);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            this.redirectToDashboard();
+          } catch {
+            console.error('Failed to process OAuth token');
+          }
+        }
+      });
+    }
   }
 
   private loadStoredUser(): void {
