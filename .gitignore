@@ -1,0 +1,55 @@
+# Backend
+backend/target/
+backend/*.log
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.npm/
+
+# Mobile
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework/
+mobile/ios/Flutter/Flutter.podspec
+mobile/*.iml
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+.DS_Store
+
+# Environment & Secrets
+*.env
+*.env.*
+!*.env.example
+application-prod.properties
+application-local.properties
+secrets/
+credentials/
+
+# Logs
+*.log
+logs/
+
+# Uploads
+uploads/
+
+# OS
+Thumbs.db
+.DS_Store

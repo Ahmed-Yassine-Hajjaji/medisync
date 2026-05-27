@@ -1,0 +1,44 @@
+# Application
+spring.application.name=MediSync
+server.port=8080
+
+# Database - Configure for your environment
+# H2 (Development)
+spring.datasource.url=jdbc:h2:mem:medisync;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# MySQL (Production) - Uncomment and configure
+# spring.datasource.url=jdbc:mysql://localhost:3306/medisync
+# spring.datasource.driverClassName=com.mysql.cj.jdbc.Driver
+# spring.datasource.username=your_username
+# spring.datasource.password=your_password
+
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+# JWT - CHANGE THIS IN PRODUCTION
+jwt.secret=YOUR_SECRET_KEY_HERE_MIN_32_CHARACTERS
+jwt.expiration=86400000
+
+# File Upload
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=20MB
+file.upload-dir=./uploads
+
+# Mail - Configure with your SMTP server
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# OpenAPI
+springdoc.api-docs.path=/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
