@@ -18,28 +18,52 @@ import { Patient, Medecin } from '../../../core/models/user.model';
 
       <div class="stats-grid">
         <div class="stat-card card">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats?.totalPatients || 0 }}</div>
             <div class="stat-label">Patients</div>
           </div>
         </div>
         <div class="stat-card card">
-          <div class="stat-icon">🩺</div>
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats?.totalMedecins || 0 }}</div>
             <div class="stat-label">Medecins</div>
           </div>
         </div>
         <div class="stat-card card">
-          <div class="stat-icon">📅</div>
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 2v4"/>
+              <path d="M16 2v4"/>
+              <rect width="18" height="18" x="3" y="4" rx="2"/>
+              <path d="M3 10h18"/>
+            </svg>
+          </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats?.totalAppointmentsToday || 0 }}</div>
             <div class="stat-label">RDV aujourd'hui</div>
           </div>
         </div>
         <div class="stat-card card">
-          <div class="stat-icon">💰</div>
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+              <path d="M12 18V6"/>
+            </svg>
+          </div>
           <div class="stat-info">
             <div class="stat-value">{{ stats?.revenueMonth || 0 }} DH</div>
             <div class="stat-label">Revenu du mois</div>
@@ -163,7 +187,16 @@ import { Patient, Medecin } from '../../../core/models/user.model';
       align-items: center;
       gap: 1rem;
 
-      .stat-icon { font-size: 2rem; }
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-light);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+      }
       .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
       .stat-label { color: var(--gray-500); font-size: 0.875rem; }
     }

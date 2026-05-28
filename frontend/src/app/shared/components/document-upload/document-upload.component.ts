@@ -38,7 +38,13 @@ export interface UploadedDocument {
 
         @if (!selectedFile && !isUploading) {
           <div class="placeholder">
-            <span class="upload-icon">&#128196;</span>
+            <div class="upload-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
             <p class="main-text">Glissez votre fichier ici ou cliquez pour parcourir</p>
             <p class="sub-text">PDF, JPG, PNG, DICOM (max {{ maxSizeMB }}MB)</p>
           </div>
@@ -46,12 +52,17 @@ export interface UploadedDocument {
 
         @if (selectedFile && !isUploading) {
           <div class="file-preview">
-            <span class="file-icon">{{ getFileIcon(selectedFile.type) }}</span>
+            <div class="file-icon" [innerHTML]="getFileIcon(selectedFile.type)"></div>
             <div class="file-info">
               <p class="file-name">{{ selectedFile.name }}</p>
               <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
             </div>
-            <button class="remove-btn" (click)="removeFile($event)">&#10005;</button>
+            <button class="remove-btn" (click)="removeFile($event)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"/>
+                <path d="m6 6 12 12"/>
+              </svg>
+            </button>
           </div>
         }
 
@@ -67,7 +78,12 @@ export interface UploadedDocument {
 
       @if (error) {
         <div class="error-message">
-          <span>&#9888;</span> {{ error }}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <path d="M12 9v4"/>
+            <path d="M12 17h.01"/>
+          </svg>
+          {{ error }}
         </div>
       }
 
@@ -83,7 +99,12 @@ export interface UploadedDocument {
             <option value="AUTRE">Autre</option>
           </select>
           <button class="upload-btn" (click)="uploadFile()">
-            Telecharger le document
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Telecharger
           </button>
         </div>
       }
@@ -93,13 +114,25 @@ export interface UploadedDocument {
           <h4>Documents telecharges</h4>
           @for (doc of uploadedDocuments; track doc.filename) {
             <div class="uploaded-item">
-              <span class="file-icon">{{ getFileIconByMime(doc.mimeType) }}</span>
+              <div class="file-icon" [innerHTML]="getFileIconByMime(doc.mimeType)"></div>
               <div class="file-info">
                 <p class="file-name">{{ doc.originalName }}</p>
                 <p class="file-meta">{{ doc.category || 'Non categorise' }} - {{ formatFileSize(doc.size) }}</p>
               </div>
-              <button class="download-btn" (click)="downloadDocument(doc)">&#128229;</button>
-              <button class="delete-btn" (click)="deleteDocument(doc)">&#128465;</button>
+              <button class="download-btn" (click)="downloadDocument(doc)" title="Telecharger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </button>
+              <button class="delete-btn" (click)="deleteDocument(doc)" title="Supprimer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>
             </div>
           }
         </div>
@@ -110,154 +143,233 @@ export interface UploadedDocument {
     .upload-container {
       width: 100%;
     }
+
     .drop-zone {
-      border: 2px dashed #ccc;
-      border-radius: 12px;
-      padding: 40px 20px;
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 1.5rem;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s;
-      background: #fafafa;
+      transition: all 0.2s;
+      background: var(--gray-50);
     }
+
     .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #1976d2;
-      background: #e3f2fd;
+      border-color: var(--primary);
+      background: var(--primary-light);
     }
+
     .drop-zone.has-file {
       border-style: solid;
-      border-color: #4caf50;
-      background: #e8f5e9;
+      border-color: var(--success);
+      background: #DCFCE7;
     }
-    .placeholder .upload-icon {
-      font-size: 48px;
-      display: block;
-      margin-bottom: 16px;
+
+    .placeholder {
+      .upload-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: var(--primary-light);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+      }
+
+      .main-text {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--gray-700);
+      }
+
+      .sub-text {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--gray-500);
+      }
     }
-    .placeholder .main-text {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-      color: #333;
-    }
-    .placeholder .sub-text {
-      margin: 0;
-      font-size: 14px;
-      color: #666;
-    }
+
     .file-preview {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px;
-      background: white;
-      border-radius: 8px;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--white);
+      border-radius: var(--radius-md);
     }
+
     .file-icon {
-      font-size: 32px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-light);
+      border-radius: var(--radius-md);
+      color: var(--primary);
     }
+
     .file-info {
       flex: 1;
       text-align: left;
+
+      .file-name {
+        margin: 0;
+        font-weight: 500;
+        color: var(--gray-900);
+        word-break: break-all;
+      }
+
+      .file-size, .file-meta {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.8125rem;
+        color: var(--gray-500);
+      }
     }
-    .file-name {
-      margin: 0;
-      font-weight: 500;
-      word-break: break-all;
-    }
-    .file-size, .file-meta {
-      margin: 4px 0 0 0;
-      font-size: 12px;
-      color: #666;
-    }
+
     .remove-btn {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: 50%;
-      background: #f44336;
-      color: white;
+      border-radius: var(--radius-full);
+      background: #FEE2E2;
+      color: #DC2626;
       cursor: pointer;
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #FECACA;
+      }
     }
+
     .uploading {
-      padding: 20px;
+      padding: 1.5rem;
+
+      p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+      }
     }
+
     .progress-bar {
       height: 8px;
-      background: #e0e0e0;
-      border-radius: 4px;
+      background: var(--gray-200);
+      border-radius: var(--radius-full);
       overflow: hidden;
-      margin-bottom: 12px;
+      margin-bottom: 0.75rem;
     }
+
     .progress {
       height: 100%;
-      background: #1976d2;
+      background: var(--primary);
       transition: width 0.3s;
     }
+
     .error-message {
-      margin-top: 12px;
-      padding: 12px;
-      background: #ffebee;
-      color: #c62828;
-      border-radius: 8px;
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #FEE2E2;
+      color: #DC2626;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
     }
+
     .actions {
       display: flex;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 0.75rem;
+      margin-top: 1rem;
     }
+
     .category-select {
       flex: 1;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 0.75rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      font-size: 0.9375rem;
+      font-family: inherit;
+      color: var(--gray-700);
+      background: var(--white);
     }
+
     .upload-btn {
-      padding: 12px 24px;
-      background: #1976d2;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.9375rem;
       font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.2s;
+
+      &:hover {
+        background: var(--primary-dark);
+      }
     }
-    .upload-btn:hover {
-      background: #1565c0;
-    }
+
     .uploaded-list {
-      margin-top: 24px;
+      margin-top: 1.5rem;
+
+      h4 {
+        margin: 0 0 0.75rem 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--gray-700);
+      }
     }
-    .uploaded-list h4 {
-      margin: 0 0 12px 0;
-      font-size: 16px;
-    }
+
     .uploaded-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: #f5f5f5;
-      border-radius: 8px;
-      margin-bottom: 8px;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.5rem;
     }
+
     .download-btn, .delete-btn {
       width: 36px;
       height: 36px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
     }
+
     .download-btn {
-      background: #e3f2fd;
-      color: #1976d2;
+      background: var(--primary-light);
+      color: var(--primary);
+
+      &:hover {
+        background: #C7D2FE;
+      }
     }
+
     .delete-btn {
-      background: #ffebee;
-      color: #c62828;
+      background: #FEE2E2;
+      color: #DC2626;
+
+      &:hover {
+        background: #FECACA;
+      }
     }
   `]
 })
@@ -403,9 +515,23 @@ export class DocumentUploadComponent {
   }
 
   getFileIcon(mimeType: string): string {
-    if (mimeType.startsWith('image/')) return '&#128247;';
-    if (mimeType === 'application/pdf') return '&#128196;';
-    return '&#128462;';
+    if (mimeType.startsWith('image/')) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+        <circle cx="9" cy="9" r="2"/>
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+      </svg>`;
+    }
+    if (mimeType === 'application/pdf') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+        <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+      </svg>`;
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+      <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+    </svg>`;
   }
 
   getFileIconByMime(mimeType: string): string {

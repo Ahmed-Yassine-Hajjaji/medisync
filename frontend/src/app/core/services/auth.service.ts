@@ -54,6 +54,7 @@ export class AuthService {
             const payload = JSON.parse(atob(token.split('.')[1]));
             const authResponse: AuthResponse = {
               token: token,
+              type: 'Bearer',
               id: payload.id || 0,
               email: payload.sub || payload.email || '',
               nom: payload.nom || '',

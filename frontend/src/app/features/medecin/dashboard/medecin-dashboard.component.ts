@@ -33,11 +33,28 @@ import { Appointment } from '../../../core/models/appointment.model';
 
       <div class="quick-actions">
         <a routerLink="planning" class="action-card card">
-          <h3>📅 Mon planning</h3>
+          <div class="action-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 2v4"/>
+              <path d="M16 2v4"/>
+              <rect width="18" height="18" x="3" y="4" rx="2"/>
+              <path d="M3 10h18"/>
+            </svg>
+          </div>
+          <h3>Mon planning</h3>
           <p>Gerer mes disponibilites</p>
         </a>
         <a routerLink="consultations" class="action-card card">
-          <h3>📋 Consultations</h3>
+          <div class="action-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M16 13H8"/>
+              <path d="M16 17H8"/>
+              <path d="M10 9H8"/>
+            </svg>
+          </div>
+          <h3>Consultations</h3>
           <p>Gerer les dossiers patients</p>
         </a>
       </div>
@@ -99,18 +116,35 @@ import { Appointment } from '../../../core/models/appointment.model';
     .action-card {
       text-decoration: none;
       color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
 
       &:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       }
 
+      .action-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-light);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+      }
+
       h3 {
-        margin-bottom: 0.25rem;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
       }
 
       p {
         color: var(--gray-500);
         font-size: 0.875rem;
+        margin: 0;
       }
     }
 

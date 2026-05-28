@@ -71,8 +71,14 @@ import { Consultation } from '../../../core/models/consultation.model';
             }
           </div>
         } @empty {
-          <div class="card empty-state">
-            <p>Aucune consultation enregistree</p>
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <h3>Aucune consultation</h3>
+            <p>Votre historique de consultations apparaitra ici apres votre premiere visite medicale.</p>
           </div>
         }
       </div>
@@ -160,8 +166,37 @@ import { Consultation } from '../../../core/models/consultation.model';
 
     .empty-state {
       text-align: center;
-      padding: 3rem;
-      color: var(--gray-500);
+      padding: 4rem 2rem;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+
+      .empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: var(--primary-light);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+      }
+
+      h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+      }
+
+      p {
+        margin: 0;
+        color: var(--gray-500);
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.5;
+      }
     }
   `]
 })
