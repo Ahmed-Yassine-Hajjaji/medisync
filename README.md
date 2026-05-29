@@ -7,12 +7,14 @@ Application web et mobile complete pour la gestion d'une clinique medicale multi
 | Composant | Technologies |
 |-----------|-------------|
 | **Backend** | Spring Boot 3.2, Java 17, Spring Security, JWT, OAuth2 |
-| **Frontend** | Angular 17 (Standalone Components), TypeScript, Leaflet |
+| **Frontend** | Angular 17, TypeScript, PrimeNG, Chart.js, FullCalendar, Leaflet, Lucide icons |
+| **PDF** | jsPDF + jspdf-autotable (ordonnances, factures, rapports) |
 | **Mobile** | Flutter 3.x, Provider, Firebase Messaging |
 | **Base de donnees** | PostgreSQL (Supabase) |
 | **Stockage** | Supabase Storage (S3 compatible) |
 | **Emails** | Resend API |
 | **Notifications** | Firebase Cloud Messaging (FCM) |
+| **Devise** | Dirham marocain (MAD), locale fr-MA |
 
 ## Fonctionnalites
 
@@ -32,23 +34,28 @@ Application web et mobile complete pour la gestion d'une clinique medicale multi
 - Notifications de rappel (email + push)
 
 ### Module Medecin
-- Agenda interactif
-- Gestion des disponibilites
+- Agenda interactif FullCalendar (vue jour/semaine/mois)
+- Gestion des disponibilites (recurrentes + ponctuelles)
+- FAB "Urgence" pour bloquer un creneau a la volee
+- Dialog "Marquer disponible" sur clic d'un creneau vide
 - Dossier patient complet
-- Redaction de consultations
-- Prescriptions electroniques
+- Redaction de consultations (split list/form)
+- Prescriptions electroniques avec generation PDF
 - Statistiques personnelles
 
 ### Module Secretaire
-- Gestion des patients
-- Prise de RDV pour patients
-- Confirmation/Annulation de RDV
-- Facturation et encaissements
+- **Agenda timeline** 08h-18h tous medecins confondus avec stats live
+- **Gestion des RDV** : filtres date/medecin/statut, creation avec autocomplete patient + grille de creneaux
+- **Annuaire patients** : recherche, table, dialog creation avec groupe sanguin et mot de passe initial
+- **Facturation** : 4 KPI (total, paye mois, en attente, impayees), table factures, dialog paiement (especes/carte/cheque/virement)
 
 ### Module Administrateur
-- Dashboard avec KPIs
-- Gestion des utilisateurs
-- Gestion des medecins et specialites
+- Dashboard 4 KPI pastel : Patients / Medecins / RDV / Revenus
+- Bar chart consultations par medecin (Chart.js)
+- Line chart revenus 30 jours (DH)
+- Tables d'activite recente (RDV et consultations)
+- Gestion utilisateurs / medecins / cliniques / salles
+- 2FA TOTP (Google Authenticator compatible)
 - Rapports financiers avec graphiques
 - Export PDF des rapports
 
@@ -206,6 +213,51 @@ Le systeme envoie automatiquement des rappels de RDV:
 - **24h avant** - Email + Push notification
 - **1h avant** - Email + Push notification
 - **Le matin meme** - Email + Push notification (7h00)
+
+## Comptes de demonstration
+
+Le `DataInitializer` cree automatiquement au premier lancement (si la table `users` est vide) :
+
+| Role | Email | Mot de passe |
+|------|-------|--------------|
+| Admin | `admin@medisync.ma` | `Test@2026` |
+| Secretaire | `secretaire@medisync.ma` | `Test@2026` |
+| Patient | `patient@test.ma` | `Test@2026` |
+| Medecin generaliste | `dr.benali@medisync.ma` | `Test@2026` |
+| Medecin cardiologue | `dr.elkhaldi@medisync.ma` | `Test@2026` |
+| Medecin dermatologue | `dr.tazi@medisync.ma` | `Test@2026` |
+| Medecin pediatre | `dr.amrani@medisync.ma` | `Test@2026` |
+| Medecin generaliste | `dr.berrada@medisync.ma` | `Test@2026` |
+| Medecin chirurgien | `dr.fassi@medisync.ma` | `Test@2026` |
+
+## Deploiement
+
+### Architecture recommandee
+
+| Composant | Plateforme |
+|-----------|------------|
+| Frontend Angular | **Vercel** (gratuit, SSL auto, CDN global) |
+| Backend Spring Boot | **Render** ou **Railway** (Vercel ne supporte pas la JVM) |
+| Base PostgreSQL | **Supabase** (deja configure) |
+| Storage fichiers | **Supabase Storage** |
+
+### Frontend sur Vercel
+
+1. Importer le repo GitHub sur https://vercel.com/new
+2. Selectionner le dossier racine : `frontend/`
+3. Framework : **Angular** (auto-detecte)
+4. Build command : `npm run build`
+5. Output directory : `dist/medisync/browser`
+6. Variable d'environnement : modifier `frontend/src/environments/environment.prod.ts` avec l'URL du backend de production
+
+### Backend sur Render
+
+1. Creer un Web Service sur https://render.com/
+2. Connecter le repo, root directory : `backend/`
+3. Build command : `mvn clean package -DskipTests`
+4. Start command : `java -jar target/medisync-backend-1.0.0.jar`
+5. Ajouter les variables d'environnement (voir section Configuration)
+6. Adapter le CORS dans `SecurityConfig.java` pour autoriser le domaine Vercel
 
 ## Documentation
 
