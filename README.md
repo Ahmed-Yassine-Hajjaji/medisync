@@ -230,35 +230,6 @@ Le `DataInitializer` cree automatiquement au premier lancement (si la table `use
 | Medecin generaliste | `dr.berrada@medisync.ma` | `Test@2026` |
 | Medecin chirurgien | `dr.fassi@medisync.ma` | `Test@2026` |
 
-## Deploiement
-
-### Architecture recommandee
-
-| Composant | Plateforme |
-|-----------|------------|
-| Frontend Angular | **Vercel** (gratuit, SSL auto, CDN global) |
-| Backend Spring Boot | **Render** ou **Railway** (Vercel ne supporte pas la JVM) |
-| Base PostgreSQL | **Supabase** (deja configure) |
-| Storage fichiers | **Supabase Storage** |
-
-### Frontend sur Vercel
-
-1. Importer le repo GitHub sur https://vercel.com/new
-2. Selectionner le dossier racine : `frontend/`
-3. Framework : **Angular** (auto-detecte)
-4. Build command : `npm run build`
-5. Output directory : `dist/medisync/browser`
-6. Variable d'environnement : modifier `frontend/src/environments/environment.prod.ts` avec l'URL du backend de production
-
-### Backend sur Render
-
-1. Creer un Web Service sur https://render.com/
-2. Connecter le repo, root directory : `backend/`
-3. Build command : `mvn clean package -DskipTests`
-4. Start command : `java -jar target/medisync-backend-1.0.0.jar`
-5. Ajouter les variables d'environnement (voir section Configuration)
-6. Adapter le CORS dans `SecurityConfig.java` pour autoriser le domaine Vercel
-
 ## Documentation
 
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
