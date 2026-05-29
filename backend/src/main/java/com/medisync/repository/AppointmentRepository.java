@@ -34,4 +34,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findAppointmentsForReminder(LocalDateTime startDateTime, LocalDateTime endDateTime, String statut);
 
     List<Appointment> findByDateAndStatut(LocalDate date, String statut);
+
+    List<Appointment> findByDate(LocalDate date);
+
+    @Query("SELECT a FROM Appointment a WHERE a.date BETWEEN :start AND :end ORDER BY a.date ASC, a.heureDebut ASC")
+    List<Appointment> findByDateBetween(LocalDate start, LocalDate end);
 }

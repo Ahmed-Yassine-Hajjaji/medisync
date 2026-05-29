@@ -51,4 +51,21 @@ export class PatientService {
   updatePatientBySecretaire(id: number, data: Partial<Patient>): Observable<Patient> {
     return this.http.put<Patient>(`${this.secretaireUrl}/patients/${id}`, data);
   }
+
+  createPatientBySecretaire(data: Partial<Patient>, password?: string): Observable<Patient> {
+    const params: any = {};
+    if (password) params.password = password;
+    return this.http.post<Patient>(`${this.secretaireUrl}/patients`, data, { params });
+  }
+
+  /** Liste de toutes les factures (espace secrétaire). */
+  getAllInvoicesBySecretaire(): Observable<Invoice[]> {
+    return this.http.get<Invoice[]>(`${this.secretaireUrl}/invoices`);
+  }
+
+  recordPayment(invoiceId: number, montant: number, modePaiement: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.secretaireUrl}/invoices/${invoiceId}/payment`, null, {
+      params: { montant: montant.toString(), modePaiement }
+    });
+  }
 }

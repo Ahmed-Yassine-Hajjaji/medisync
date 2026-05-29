@@ -45,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
         // Admin
         Admin admin = new Admin();
         admin.setEmail("admin@medisync.ma");
-        admin.setPassword(passwordEncoder.encode("Admin123!"));
+        admin.setPassword(passwordEncoder.encode("Test@2026"));
         admin.setNom("Hajjaji");
         admin.setPrenom("Ahmed");
         admin.setRole(Role.ADMIN);
@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         // Medecin Generaliste - Secteur 1 (150 DH)
         Medecin medecin1 = new Medecin();
         medecin1.setEmail("dr.benali@medisync.ma");
-        medecin1.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin1.setPassword(passwordEncoder.encode("Test@2026"));
         medecin1.setNom("Benali");
         medecin1.setPrenom("Karim");
         medecin1.setRole(Role.MEDECIN);
@@ -72,7 +72,7 @@ public class DataInitializer implements CommandLineRunner {
         // Cardiologue - Specialiste (500 DH)
         Medecin medecin2 = new Medecin();
         medecin2.setEmail("dr.elkhaldi@medisync.ma");
-        medecin2.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin2.setPassword(passwordEncoder.encode("Test@2026"));
         medecin2.setNom("El Khaldi");
         medecin2.setPrenom("Fatima");
         medecin2.setRole(Role.MEDECIN);
@@ -88,7 +88,7 @@ public class DataInitializer implements CommandLineRunner {
         // Dermatologue - Specialiste (400 DH)
         Medecin medecin3 = new Medecin();
         medecin3.setEmail("dr.tazi@medisync.ma");
-        medecin3.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin3.setPassword(passwordEncoder.encode("Test@2026"));
         medecin3.setNom("Tazi");
         medecin3.setPrenom("Youssef");
         medecin3.setRole(Role.MEDECIN);
@@ -104,7 +104,7 @@ public class DataInitializer implements CommandLineRunner {
         // Pediatre - Specialiste (300 DH)
         Medecin medecin4 = new Medecin();
         medecin4.setEmail("dr.amrani@medisync.ma");
-        medecin4.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin4.setPassword(passwordEncoder.encode("Test@2026"));
         medecin4.setNom("Amrani");
         medecin4.setPrenom("Laila");
         medecin4.setRole(Role.MEDECIN);
@@ -120,7 +120,7 @@ public class DataInitializer implements CommandLineRunner {
         // Generaliste Secteur 2 (200 DH)
         Medecin medecin5 = new Medecin();
         medecin5.setEmail("dr.berrada@medisync.ma");
-        medecin5.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin5.setPassword(passwordEncoder.encode("Test@2026"));
         medecin5.setNom("Berrada");
         medecin5.setPrenom("Omar");
         medecin5.setRole(Role.MEDECIN);
@@ -136,7 +136,7 @@ public class DataInitializer implements CommandLineRunner {
         // Chirurgien (700 DH)
         Medecin medecin6 = new Medecin();
         medecin6.setEmail("dr.fassi@medisync.ma");
-        medecin6.setPassword(passwordEncoder.encode("Doctor123!"));
+        medecin6.setPassword(passwordEncoder.encode("Test@2026"));
         medecin6.setNom("Fassi Fihri");
         medecin6.setPrenom("Mohammed");
         medecin6.setRole(Role.MEDECIN);
@@ -169,7 +169,7 @@ public class DataInitializer implements CommandLineRunner {
         // Secretaire
         Secretaire secretaire = new Secretaire();
         secretaire.setEmail("secretaire@medisync.ma");
-        secretaire.setPassword(passwordEncoder.encode("Secret123!"));
+        secretaire.setPassword(passwordEncoder.encode("Test@2026"));
         secretaire.setNom("Alaoui");
         secretaire.setPrenom("Khadija");
         secretaire.setRole(Role.SECRETAIRE);
@@ -180,7 +180,7 @@ public class DataInitializer implements CommandLineRunner {
         // Patient test
         Patient patient = new Patient();
         patient.setEmail("patient@test.ma");
-        patient.setPassword(passwordEncoder.encode("Patient123!"));
+        patient.setPassword(passwordEncoder.encode("Test@2026"));
         patient.setNom("Idrissi");
         patient.setPrenom("Amine");
         patient.setRole(Role.PATIENT);

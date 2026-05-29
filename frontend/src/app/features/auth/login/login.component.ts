@@ -2,13 +2,18 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessagesModule } from 'primeng/messages';
+import { Message } from 'primeng/api';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, InputTextModule, ButtonModule, ToastModule, MessagesModule],
   template: `
     <div class="login-page">
       <div class="login-container animate-slideUp">
@@ -48,13 +53,14 @@ import { environment } from '../../../../environments/environment';
                 </svg>
               </span>
               <input
+                pInputText
                 type="email"
                 id="email"
                 class="form-control"
                 formControlName="email"
                 placeholder="votre@email.com"
                 autocomplete="email"
-              >
+              />
             </div>
             @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
               <span class="error-message">
@@ -81,13 +87,14 @@ import { environment } from '../../../../environments/environment';
                 </svg>
               </span>
               <input
+                pInputText
                 [type]="showPassword ? 'text' : 'password'"
                 id="password"
                 class="form-control"
                 formControlName="password"
                 placeholder="Votre mot de passe"
                 autocomplete="current-password"
-              >
+              />
               <button type="button" class="input-icon-right" (click)="togglePassword()">
                 @if (showPassword) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -128,13 +135,14 @@ import { environment } from '../../../../environments/environment';
                   </svg>
                 </span>
                 <input
+                  pInputText
                   type="text"
                   id="totpCode"
                   class="form-control"
                   formControlName="totpCode"
                   placeholder="123456"
                   maxlength="6"
-                >
+                />
               </div>
             </div>
           }

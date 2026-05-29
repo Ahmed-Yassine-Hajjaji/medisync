@@ -74,6 +74,13 @@ public class InvoiceService {
         return toDTO(invoice);
     }
 
+    public List<InvoiceDTO> getAllInvoices() {
+        return invoiceRepository.findAll().stream()
+                .sorted((a, b) -> b.getDateFacture().compareTo(a.getDateFacture()))
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public BigDecimal getTotalRevenue(LocalDate start, LocalDate end) {
         BigDecimal total = invoiceRepository.getTotalRevenueBetween(start, end);
         return total != null ? total : BigDecimal.ZERO;

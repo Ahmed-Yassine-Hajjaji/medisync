@@ -44,6 +44,13 @@ public class SecretaireController {
         return ResponseEntity.ok(patientService.updatePatient(id, dto));
     }
 
+    @PostMapping("/patients")
+    public ResponseEntity<PatientDTO> createPatient(
+            @RequestBody PatientDTO dto,
+            @RequestParam(required = false) String password) {
+        return ResponseEntity.ok(patientService.createPatient(dto, password));
+    }
+
     @GetMapping("/medecins")
     public ResponseEntity<List<MedecinDTO>> getAllMedecins() {
         return ResponseEntity.ok(medecinService.getAllMedecins());
@@ -83,6 +90,18 @@ public class SecretaireController {
         return ResponseEntity.ok(appointmentService.getAppointmentsByMedecinAndDate(medecinId, date));
     }
 
+    @GetMapping("/appointments")
+    public ResponseEntity<List<AppointmentDTO>> getAppointments(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        if (from != null && to != null) {
+            return ResponseEntity.ok(appointmentService.getAllAppointmentsBetween(from, to));
+        }
+        LocalDate target = date != null ? date : LocalDate.now();
+        return ResponseEntity.ok(appointmentService.getAllAppointmentsByDate(target));
+    }
+
     @PostMapping("/invoices/{consultationId}")
     public ResponseEntity<InvoiceDTO> createInvoice(
             @PathVariable Long consultationId,
@@ -106,5 +125,10 @@ public class SecretaireController {
     @GetMapping("/invoices/patient/{patientId}/unpaid")
     public ResponseEntity<List<InvoiceDTO>> getUnpaidInvoices(@PathVariable Long patientId) {
         return ResponseEntity.ok(invoiceService.getUnpaidInvoices(patientId));
+    }
+
+    @GetMapping("/invoices")
+    public ResponseEntity<List<InvoiceDTO>> getAllInvoices() {
+        return ResponseEntity.ok(invoiceService.getAllInvoices());
     }
 }

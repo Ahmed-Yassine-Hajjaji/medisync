@@ -28,16 +28,22 @@ interface TwoFactorSetup {
         <!-- 2FA Status Card -->
         <div class="status-card" [class.enabled]="is2FAEnabled">
           <div class="status-icon">
-            {{ is2FAEnabled ? '&#128274;' : '&#128275;' }}
+            @if (is2FAEnabled) { &#128274; } @else { &#128275; }
           </div>
           <div class="status-info">
-            <h2>{{ is2FAEnabled ? '2FA Active' : '2FA Desactive' }}</h2>
-            <p>{{ is2FAEnabled
-              ? 'Votre compte est protege par l\'authentification a deux facteurs'
-              : 'Activez la 2FA pour renforcer la securite de votre compte' }}</p>
+            <h2>
+              @if (is2FAEnabled) { 2FA Activée } @else { 2FA Désactivée }
+            </h2>
+            <p>
+              @if (is2FAEnabled) {
+                Votre compte est protégé par l'authentification à deux facteurs.
+              } @else {
+                Activez la 2FA pour renforcer la sécurité de votre compte.
+              }
+            </p>
           </div>
           @if (is2FAEnabled) {
-            <button class="btn-danger" (click)="disable2FA()">Desactiver</button>
+            <button class="btn-danger" (click)="disable2FA()">Désactiver</button>
           } @else {
             <button class="btn-primary" (click)="startSetup()">Activer</button>
           }

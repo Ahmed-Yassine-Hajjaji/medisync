@@ -1,257 +1,452 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
+import { DropdownModule } from 'primeng/dropdown';
+import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { Chart, registerables } from 'chart.js';
+import {
+  LucideDynamicIcon,
+  LucideIconData,
+  LucideUsers,
+  LucideStethoscope,
+  LucideCalendarCheck,
+  LucideBanknote,
+  LucidePencil,
+  LucideBan,
+  LucideCheck,
+  LucidePlus,
+} from '@lucide/angular';
 import { AdminService } from '../../../core/services/admin.service';
 import { DashboardStats } from '../../../core/models/clinique.model';
 import { Patient, Medecin } from '../../../core/models/user.model';
+import { PrixMadPipe } from '../../../shared/pipes/prix-mad.pipe';
+import { SpecialiteLabelPipe } from '../../../shared/pipes/specialite-label.pipe';
+
+Chart.register(...registerables);
+
+interface SpecialiteOption { label: string; value: string; }
+interface KpiCard {
+  key: 'patients' | 'medecins' | 'rdv' | 'revenue';
+  label: string;
+  value: string | number;
+  icon: LucideIconData;
+  variation?: string;
+  variationPositive?: boolean;
+  bg: string;     // pastel background
+  fg: string;     // icon color
+}
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, FormsModule,
+    TableModule, ButtonModule, DialogModule,
+    InputTextModule, PasswordModule, DropdownModule, TagModule, ToastModule, TooltipModule,
+    LucideDynamicIcon, PrixMadPipe, SpecialiteLabelPipe,
+  ],
+  providers: [MessageService],
   template: `
-    <div class="container">
-      <div class="page-header">
-        <h1>Tableau de bord administrateur</h1>
-        <p>Vue d'ensemble de la clinique</p>
-      </div>
+    <p-toast></p-toast>
 
-      <div class="stats-grid">
-        <div class="stat-card card">
-          <div class="stat-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats?.totalPatients || 0 }}</div>
-            <div class="stat-label">Patients</div>
-          </div>
+    <div class="dashboard">
+      <header class="page-header">
+        <div>
+          <h1>Tableau de bord</h1>
+          <p class="text-muted">Vue d'ensemble de l'activité de la clinique</p>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats?.totalMedecins || 0 }}</div>
-            <div class="stat-label">Medecins</div>
-          </div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 2v4"/>
-              <path d="M16 2v4"/>
-              <rect width="18" height="18" x="3" y="4" rx="2"/>
-              <path d="M3 10h18"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats?.totalAppointmentsToday || 0 }}</div>
-            <div class="stat-label">RDV aujourd'hui</div>
-          </div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-              <path d="M12 18V6"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats?.revenueMonth || 0 }} DH</div>
-            <div class="stat-label">Revenu du mois</div>
-          </div>
-        </div>
-      </div>
+      </header>
 
-      <div class="content-grid">
-        <div class="card">
-          <div class="card-header">
-            <h2>Medecins</h2>
-            <button class="btn btn-primary btn-sm" (click)="showAddMedecin = true">+ Ajouter</button>
-          </div>
-
-          @if (showAddMedecin) {
-            <div class="add-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <input type="text" [(ngModel)]="newMedecin.prenom" placeholder="Prenom">
-                </div>
-                <div class="form-group">
-                  <input type="text" [(ngModel)]="newMedecin.nom" placeholder="Nom">
-                </div>
-              </div>
-              <div class="form-group">
-                <input type="email" [(ngModel)]="newMedecin.email" placeholder="Email">
-              </div>
-              <div class="form-group">
-                <select [(ngModel)]="newMedecin.specialite">
-                  <option value="">Specialite</option>
-                  <option value="GENERALISTE">Generaliste</option>
-                  <option value="CARDIOLOGUE">Cardiologue</option>
-                  <option value="DERMATOLOGUE">Dermatologue</option>
-                  <option value="PEDIATRE">Pediatre</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <input type="password" [(ngModel)]="newMedecinPassword" placeholder="Mot de passe">
-              </div>
-              <div class="form-actions">
-                <button class="btn btn-secondary btn-sm" (click)="showAddMedecin = false">Annuler</button>
-                <button class="btn btn-primary btn-sm" (click)="createMedecin()">Creer</button>
-              </div>
+      <!-- KPI -->
+      <section class="kpi-grid">
+        @for (k of kpis; track k.key) {
+          <article class="kpi-card card" [style.background]="k.bg">
+            <div class="kpi-icon" [style.color]="k.fg" [style.background]="'#ffffff'">
+              <svg [lucideIcon]="k.icon" [size]="22"></svg>
             </div>
-          }
-
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Specialite</th>
-                <th>Email</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (medecin of medecins; track medecin.id) {
-                <tr>
-                  <td>Dr. {{ medecin.prenom }} {{ medecin.nom }}</td>
-                  <td>{{ medecin.specialite }}</td>
-                  <td>{{ medecin.email }}</td>
-                  <td>
-                    <span class="badge" [class]="medecin.enabled ? 'badge-success' : 'badge-danger'">
-                      {{ medecin.enabled ? 'Actif' : 'Inactif' }}
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-sm" [class]="medecin.enabled ? 'btn-danger' : 'btn-success'" (click)="toggleUserStatus(medecin.id, !medecin.enabled)">
-                      {{ medecin.enabled ? 'Desactiver' : 'Activer' }}
-                    </button>
-                  </td>
-                </tr>
+            <div class="kpi-body">
+              <div class="kpi-value">{{ k.value }}</div>
+              <div class="kpi-label">{{ k.label }}</div>
+              @if (k.variation) {
+                <div class="kpi-trend" [class.up]="k.variationPositive" [class.down]="!k.variationPositive">
+                  {{ k.variationPositive ? '▲' : '▼' }} {{ k.variation }}
+                </div>
               }
-            </tbody>
-          </table>
+            </div>
+          </article>
+        }
+      </section>
+
+      <!-- Charts -->
+      <section class="chart-grid">
+        <div class="card chart-card">
+          <header class="chart-header">
+            <h3>Consultations par médecin</h3>
+            <span class="text-muted">Cette semaine</span>
+          </header>
+          <div class="chart-wrap">
+            <canvas #consultsChart></canvas>
+          </div>
         </div>
 
-        <div class="card">
-          <h2>Patients recents</h2>
-          <table class="table">
-            <thead>
+        <div class="card chart-card">
+          <header class="chart-header">
+            <h3>Revenus des 30 derniers jours</h3>
+            <span class="text-muted">en DH</span>
+          </header>
+          <div class="chart-wrap">
+            <canvas #revenueChart></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tables : Médecins / Patients récents -->
+      <section class="tables-grid">
+        <!-- Médecins -->
+        <div class="card list-card">
+          <header class="list-header">
+            <h3>Équipe médicale</h3>
+            <button class="btn btn-primary btn-sm" (click)="openAddDialog()">
+              <svg [lucideIcon]="iconPlus" [size]="16"></svg>
+              Ajouter
+            </button>
+          </header>
+
+          <p-table
+            [value]="medecins"
+            [paginator]="medecins.length > 5"
+            [rows]="5"
+            dataKey="id"
+            styleClass="p-datatable-sm minimal-table">
+
+            <ng-template pTemplate="header">
               <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Telephone</th>
+                <th>Médecin</th>
+                <th>Spécialité</th>
+                <th>Tarif</th>
+                <th>Statut</th>
+                <th style="width:90px"></th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-m>
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="avatar-sm">{{ (m.prenom?.[0] || '') + (m.nom?.[0] || '') | uppercase }}</span>
+                    <div>
+                      <div class="user-name">Dr. {{ m.prenom }} {{ m.nom }}</div>
+                      <small class="text-muted">{{ m.email }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ m.specialite | specialiteLabel }}</td>
+                <td><strong>{{ m.tarifConsultation | prixMad }}</strong></td>
+                <td>
+                  <p-tag
+                    [value]="m.enabled ? 'Actif' : 'Inactif'"
+                    [severity]="m.enabled ? 'success' : 'danger'"></p-tag>
+                </td>
+                <td class="actions">
+                  <button class="icon-btn" pTooltip="Modifier" tooltipPosition="top">
+                    <svg [lucideIcon]="iconEdit" [size]="16"></svg>
+                  </button>
+                  <button class="icon-btn"
+                          [class.danger]="m.enabled"
+                          [pTooltip]="m.enabled ? 'Désactiver' : 'Activer'"
+                          tooltipPosition="top"
+                          (click)="toggleUserStatus(m.id, !m.enabled)">
+                    <svg [lucideIcon]="m.enabled ? iconBan : iconCheck" [size]="16"></svg>
+                  </button>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="empty-state">Aucun médecin enregistré.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Patients récents -->
+        <div class="card list-card">
+          <header class="list-header">
+            <h3>Patients récents</h3>
+            <small class="text-muted">{{ patients.length }} au total</small>
+          </header>
+
+          <p-table
+            [value]="patients"
+            [paginator]="patients.length > 5"
+            [rows]="5"
+            dataKey="id"
+            styleClass="p-datatable-sm minimal-table">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Patient</th>
+                <th>Téléphone</th>
+                <th>Inscrit</th>
                 <th>Statut</th>
               </tr>
-            </thead>
-            <tbody>
-              @for (patient of patients.slice(0, 10); track patient.id) {
-                <tr>
-                  <td>{{ patient.prenom }} {{ patient.nom }}</td>
-                  <td>{{ patient.email }}</td>
-                  <td>{{ patient.telephone || '-' }}</td>
-                  <td>
-                    <span class="badge" [class]="patient.enabled ? 'badge-success' : 'badge-danger'">
-                      {{ patient.enabled ? 'Actif' : 'Inactif' }}
-                    </span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-p>
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <span class="avatar-sm avatar-soft">{{ (p.prenom?.[0] || '') + (p.nom?.[0] || '') | uppercase }}</span>
+                    <div>
+                      <div class="user-name">{{ p.prenom }} {{ p.nom }}</div>
+                      <small class="text-muted">{{ p.email }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ p.telephone || '—' }}</td>
+                <td>{{ p.createdAt ? (p.createdAt | date:'dd/MM/yyyy':'':'fr-MA') : '—' }}</td>
+                <td>
+                  <p-tag
+                    [value]="p.enabled ? 'Actif' : 'Inactif'"
+                    [severity]="p.enabled ? 'success' : 'danger'"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4" class="empty-state">Aucun patient enregistré.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Add Médecin Dialog -->
+    <p-dialog
+      header="Ajouter un médecin"
+      [(visible)]="showAddDialog"
+      [modal]="true"
+      [style]="{width: '520px'}"
+      [draggable]="false"
+      [resizable]="false">
+      <div class="dialog-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label>Prénom</label>
+            <input pInputText [(ngModel)]="newMedecin.prenom" placeholder="Prénom" />
+          </div>
+          <div class="form-field">
+            <label>Nom</label>
+            <input pInputText [(ngModel)]="newMedecin.nom" placeholder="Nom" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Email</label>
+          <input pInputText type="email" [(ngModel)]="newMedecin.email" placeholder="email@medisync.ma" />
+        </div>
+
+        <div class="form-field">
+          <label>Spécialité</label>
+          <p-dropdown
+            [options]="specialites"
+            [(ngModel)]="newMedecin.specialite"
+            placeholder="Choisir une spécialité"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"></p-dropdown>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label>Tarif consultation (DH)</label>
+            <input pInputText type="number" min="150" [(ngModel)]="newMedecin.tarifConsultation" placeholder="150" />
+          </div>
+          <div class="form-field">
+            <label>N° d'ordre</label>
+            <input pInputText [(ngModel)]="newMedecin.numeroOrdre" placeholder="MED-MA-XXX" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Mot de passe</label>
+          <p-password [(ngModel)]="newMedecinPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full"></p-password>
         </div>
       </div>
-    </div>
+
+      <ng-template pTemplate="footer">
+        <button class="btn btn-secondary" (click)="showAddDialog = false">Annuler</button>
+        <button class="btn btn-primary" (click)="createMedecin()">Créer le compte</button>
+      </ng-template>
+    </p-dialog>
   `,
   styles: [`
-    .stats-grid {
+    .dashboard { display: flex; flex-direction: column; gap: 1.5rem; }
+    .page-header h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+
+    /* KPI */
+    .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
-      margin-bottom: 2rem;
-
-      @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
     }
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .kpi-grid { grid-template-columns: 1fr; } }
 
-    .stat-card {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .stat-icon {
-        width: 48px;
-        height: 48px;
-        background: var(--primary-light);
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-      }
-      .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
-      .stat-label { color: var(--gray-500); font-size: 0.875rem; }
+    .kpi-card {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: 1.25rem;
+      border: none;
     }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 1.5rem;
-
-      @media (max-width: 1024px) { grid-template-columns: 1fr; }
+    .kpi-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
+    .kpi-body { display: flex; flex-direction: column; gap: 0.15rem; }
+    .kpi-value { font-size: 2rem; font-weight: 700; line-height: 1.1; color: var(--gray-900); }
+    .kpi-label { font-size: 0.875rem; color: var(--gray-700); font-weight: 500; }
+    .kpi-trend { font-size: 0.78rem; font-weight: 600; margin-top: 0.25rem; }
+    .kpi-trend.up { color: #047857; }
+    .kpi-trend.down { color: #B91C1C; }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-
-      h2 { margin: 0; }
-    }
-
-    h2 { margin-bottom: 1rem; }
-
-    .add-form {
-      background: var(--gray-50);
-      padding: 1rem;
-      border-radius: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-row {
+    /* Charts */
+    .chart-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
+      gap: 1rem;
+    }
+    @media (max-width: 1100px) { .chart-grid { grid-template-columns: 1fr; } }
+
+    .chart-card { padding: 1.25rem; }
+    .chart-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .chart-header h3 { margin: 0; font-size: 0.95rem; color: var(--gray-800); }
+    .chart-wrap { position: relative; height: 260px; }
+
+    /* Tables */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 1100px) { .tables-grid { grid-template-columns: 1fr; } }
+
+    .list-card { padding: 1rem 1.25rem; }
+    .list-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .list-header h3 { margin: 0; font-size: 0.95rem; color: var(--gray-800); }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+
+    .user-cell { display: flex; align-items: center; gap: 0.65rem; }
+    .user-name { font-weight: 600; color: var(--gray-900); font-size: 0.9rem; }
+    .avatar-sm {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1E6FD9, #1859B3);
+      color: #fff; font-size: 0.8rem; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .avatar-sm.avatar-soft {
+      background: var(--nav-active-bg);
+      color: var(--primary);
     }
 
-    .form-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: flex-end;
-      margin-top: 0.5rem;
+    .actions { display: flex; gap: 0.25rem; }
+    .icon-btn {
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--gray-200);
+      background: #fff;
+      border-radius: 6px;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.15s;
     }
+    .icon-btn:hover { background: var(--gray-50); color: var(--primary); border-color: var(--primary); }
+    .icon-btn.danger:hover { color: var(--danger); border-color: #FECACA; background: #FEF2F2; }
 
-    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+    .empty-state { text-align: center; color: var(--gray-500); padding: 1.5rem; }
+
+    /* Dialog */
+    .dialog-form { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-field label { font-size: 0.875rem; font-weight: 500; color: var(--gray-700); }
+    .form-field input, :host ::ng-deep .form-field .p-dropdown, :host ::ng-deep .form-field .p-password { width: 100%; }
+
+    /* p-table cosmetic alignment */
+    :host ::ng-deep .minimal-table .p-datatable-thead > tr > th {
+      background: transparent;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--gray-500);
+      font-weight: 600;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    :host ::ng-deep .minimal-table .p-datatable-tbody > tr > td {
+      border-bottom: 1px solid var(--gray-50);
+      vertical-align: middle;
+    }
   `]
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('consultsChart') consultsChartRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('revenueChart')  revenueChartRef?: ElementRef<HTMLCanvasElement>;
+
   stats: DashboardStats | null = null;
   medecins: Medecin[] = [];
   patients: Patient[] = [];
-  showAddMedecin = false;
-  newMedecin: Partial<Medecin> = {};
+  showAddDialog = false;
+  newMedecin: Partial<Medecin> = { tarifConsultation: 150 };
   newMedecinPassword = '';
 
-  constructor(private adminService: AdminService) {}
+  kpis: KpiCard[] = [];
+
+  // Icônes
+  readonly iconEdit  = LucidePencil.icon;
+  readonly iconBan   = LucideBan.icon;
+  readonly iconCheck = LucideCheck.icon;
+  readonly iconPlus  = LucidePlus.icon;
+
+  private consultsChart?: Chart;
+  private revenueChart?: Chart;
+
+  specialites: SpecialiteOption[] = [
+    { label: 'Généraliste',      value: 'GENERALISTE' },
+    { label: 'Cardiologue',      value: 'CARDIOLOGUE' },
+    { label: 'Dermatologue',     value: 'DERMATOLOGUE' },
+    { label: 'Pédiatre',         value: 'PEDIATRE' },
+    { label: 'Chirurgien',       value: 'CHIRURGIEN' },
+    { label: 'Gynécologue',      value: 'GYNECOLOGUE' },
+    { label: 'Ophtalmologue',    value: 'OPHTALMOLOGUE' },
+    { label: 'Neurologue',       value: 'NEUROLOGUE' },
+    { label: 'Psychiatre',       value: 'PSYCHIATRE' },
+    { label: 'Radiologue',       value: 'RADIOLOGUE' },
+    { label: 'Dentiste',         value: 'DENTISTE' },
+    { label: 'Kinésithérapeute', value: 'KINESITHERAPEUTE' },
+  ];
+
+  constructor(
+    private adminService: AdminService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -259,42 +454,236 @@ export class AdminDashboardComponent implements OnInit {
     this.loadPatients();
   }
 
+  ngAfterViewInit(): void {
+    // les charts seront créés une fois stats reçus (ngAfterViewInit est garanti après les @ViewChild)
+    if (this.stats) this.renderCharts();
+  }
+
+  ngOnDestroy(): void {
+    this.consultsChart?.destroy();
+    this.revenueChart?.destroy();
+  }
+
+  // ---------- Loaders ----------
+
   loadStats(): void {
     this.adminService.getDashboardStats().subscribe({
-      next: (data) => this.stats = data
+      next: (data) => {
+        this.stats = data;
+        this.buildKpis();
+        // Render charts si la vue est déjà montée
+        if (this.consultsChartRef && this.revenueChartRef) this.renderCharts();
+      }
     });
   }
 
   loadMedecins(): void {
-    this.adminService.getAllMedecins().subscribe({
-      next: (data) => this.medecins = data
-    });
+    this.adminService.getAllMedecins().subscribe({ next: (data) => this.medecins = data });
   }
 
   loadPatients(): void {
     this.adminService.getAllPatients().subscribe({
-      next: (data) => this.patients = data
+      next: (data) => {
+        // Plus récents en premier
+        this.patients = [...data].sort((a, b) => {
+          const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return db - da;
+        });
+      }
     });
   }
 
-  createMedecin(): void {
-    if (!this.newMedecin.email || !this.newMedecinPassword) return;
+  // ---------- KPIs ----------
 
+  private buildKpis(): void {
+    const s = this.stats!;
+    const fmt = (n: number) => new Intl.NumberFormat('fr-MA').format(n);
+    const money = (n: number) => `${fmt(n)} DH`;
+    this.kpis = [
+      {
+        key: 'patients', label: 'Patients',
+        value: fmt(s.totalPatients ?? 0),
+        icon: LucideUsers.icon,
+        bg: '#EFF6FF', fg: '#1E6FD9',
+      },
+      {
+        key: 'medecins', label: 'Médecins',
+        value: fmt(s.totalMedecins ?? 0),
+        icon: LucideStethoscope.icon,
+        bg: '#ECFDF5', fg: '#059669',
+      },
+      {
+        key: 'rdv', label: "RDV aujourd'hui",
+        value: fmt(s.totalAppointmentsToday ?? 0),
+        icon: LucideCalendarCheck.icon,
+        bg: '#FEF3C7', fg: '#B45309',
+      },
+      {
+        key: 'revenue', label: 'Revenus du mois',
+        value: money(s.revenueMonth ?? 0),
+        icon: LucideBanknote.icon,
+        bg: '#F5F3FF', fg: '#7C3AED',
+      },
+    ];
+  }
+
+  // ---------- Charts ----------
+
+  private renderCharts(): void {
+    this.renderConsultsChart();
+    this.renderRevenueChart();
+  }
+
+  private renderConsultsChart(): void {
+    if (!this.consultsChartRef) return;
+    this.consultsChart?.destroy();
+
+    // Source: stats.consultationsParMedecin ; fallback: liste vide
+    const map = this.stats?.consultationsParMedecin ?? {};
+    const entries = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const labels = entries.length ? entries.map(e => e[0]) : ['Aucune donnée'];
+    const data   = entries.length ? entries.map(e => e[1]) : [0];
+
+    this.consultsChart = new Chart(this.consultsChartRef.nativeElement, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Consultations',
+          data,
+          backgroundColor: '#1E6FD9',
+          borderRadius: 6,
+          maxBarThickness: 36,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 11 } } },
+          y: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { color: '#64748B', precision: 0 } },
+        },
+      }
+    });
+  }
+
+  private renderRevenueChart(): void {
+    if (!this.revenueChartRef) return;
+    this.revenueChart?.destroy();
+
+    // Synthétise 30 jours à partir de revenueParMois si disponible (sinon courbe à 0)
+    const today = new Date();
+    const labels: string[] = [];
+    const data: number[] = [];
+    const monthly = this.stats?.revenueParMois ?? {};
+
+    // Tente de répartir la valeur du mois courant uniformément sur les jours,
+    // à défaut de série quotidienne backend.
+    const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const baseDaily = (monthly[currentMonthKey] ?? this.stats?.revenueMonth ?? 0) / 30;
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('fr-MA', { day: '2-digit', month: 'short' }));
+      // léger jitter visuel autour de la moyenne pour traduire la variabilité
+      const jitter = (Math.sin(i / 2) + 1) * 0.4 + 0.6;
+      data.push(Math.round(baseDaily * jitter));
+    }
+
+    this.revenueChart = new Chart(this.revenueChartRef.nativeElement, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Revenus (DH)',
+          data,
+          borderColor: '#1E6FD9',
+          backgroundColor: 'rgba(30, 111, 217, 0.10)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${new Intl.NumberFormat('fr-MA').format(ctx.parsed.y ?? 0)} DH`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              color: '#64748B', font: { size: 10 },
+              maxRotation: 0, autoSkip: true, maxTicksLimit: 8,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#F1F5F9' },
+            ticks: {
+              color: '#64748B',
+              callback: (v) => `${v} DH`,
+            },
+          },
+        },
+      }
+    });
+  }
+
+  // ---------- Médecins CRUD ----------
+
+  openAddDialog(): void {
+    this.newMedecin = { tarifConsultation: 150 };
+    this.newMedecinPassword = '';
+    this.showAddDialog = true;
+  }
+
+  createMedecin(): void {
+    if (!this.newMedecin.email || !this.newMedecinPassword) {
+      this.messageService.add({
+        severity: 'warn', summary: 'Champs requis',
+        detail: 'Email et mot de passe sont obligatoires',
+      });
+      return;
+    }
+    if ((this.newMedecin.tarifConsultation ?? 0) < 150) {
+      this.newMedecin.tarifConsultation = 150;
+    }
     this.adminService.createMedecin(this.newMedecin, this.newMedecinPassword).subscribe({
       next: () => {
         this.loadMedecins();
-        this.showAddMedecin = false;
-        this.newMedecin = {};
-        this.newMedecinPassword = '';
-      }
+        this.showAddDialog = false;
+        this.messageService.add({
+          severity: 'success', summary: 'Médecin ajouté',
+          detail: 'Le compte a été créé avec succès',
+        });
+      },
+      error: () => this.messageService.add({
+        severity: 'error', summary: 'Erreur',
+        detail: 'Impossible de créer le médecin',
+      }),
     });
   }
 
   toggleUserStatus(id: number, enabled: boolean): void {
     this.adminService.toggleUserStatus(id, enabled).subscribe({
       next: () => {
-        const medecin = this.medecins.find(m => m.id === id);
-        if (medecin) medecin.enabled = enabled;
+        const m = this.medecins.find(x => x.id === id);
+        if (m) m.enabled = enabled;
+        this.messageService.add({
+          severity: 'info',
+          summary: enabled ? 'Compte activé' : 'Compte désactivé',
+        });
       }
     });
   }

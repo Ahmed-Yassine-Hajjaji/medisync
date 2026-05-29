@@ -67,4 +67,14 @@ export class AppointmentService {
   getAppointmentsByMedecinAndDate(medecinId: number, date: string): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.secretaireUrl}/medecin/${medecinId}/date/${date}`);
   }
+
+  /** Tous les RDV d'une journée donnée, tous médecins confondus (espace secrétaire). */
+  getAllAppointmentsByDate(date: string): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(this.secretaireUrl, { params: { date } });
+  }
+
+  /** Tous les RDV sur une plage. */
+  getAllAppointmentsBetween(from: string, to: string): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(this.secretaireUrl, { params: { from, to } });
+  }
 }

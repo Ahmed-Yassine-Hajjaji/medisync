@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import 'primeng/resources/themes/aura-light-blue/theme.css';
+@import 'primeicons/primeicons.css';
 
 * {
   margin: 0;
@@ -48,12 +50,19 @@
   --radius-full: 9999px;
 
   // Sidebar
-  --sidebar-width: 260px;
+  --sidebar-width: 240px;
+
+  // App background
+  --app-bg: #F8FAFC;
+
+  // Active nav item
+  --nav-active-bg: #EBF3FF;
+  --nav-active-color: #1E6FD9;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: var(--white);
+  background-color: var(--app-bg);
   color: var(--gray-800);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -83,11 +92,11 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 10px 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -184,8 +193,8 @@ a {
 // Cards
 .card {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
   border: 1px solid var(--gray-100);
 }
@@ -220,17 +229,17 @@ a {
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 10px 14px;
   font-size: 0.9375rem;
   font-family: inherit;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-md);
+  border: 1.5px solid #E2E8F0;
+  border-radius: 8px;
   background-color: var(--white);
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #1E6FD9;
     box-shadow: 0 0 0 3px rgba(30, 111, 217, 0.1);
   }
 
@@ -494,6 +503,47 @@ a {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+// Standard page wrapper inside any role layout
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+  width: 100%;
+}
+
+// Empty state (réutilisable)
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  color: var(--gray-500);
+
+  svg {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 1.5rem;
+    color: var(--gray-300);
+  }
+
+  h3 {
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+  }
+}
+
+// Sidebar shared shadow utility
+.sidebar-shadow {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
 }
 
 .text-center { text-align: center; }

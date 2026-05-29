@@ -2,8 +2,11 @@ package com.medisync.service;
 
 import com.medisync.dto.PatientDTO;
 import com.medisync.entity.Patient;
+import com.medisync.entity.Role;
 import com.medisync.repository.PatientRepository;
+import com.medisync.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<PatientDTO> getAllPatients() {
         return patientRepository.findAll().stream()
@@ -53,6 +58,29 @@ public class PatientService {
         patient.setGroupeSanguin(dto.getGroupeSanguin());
         patient.setAllergies(dto.getAllergies());
         patient.setAntecedents(dto.getAntecedents());
+
+        patient = patientRepository.save(patient);
+        return toDTO(patient);
+    }
+
+    @Transactional
+    public PatientDTO createPatient(PatientDTO dto, String password) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Cet email est deja utilise");
+        }
+        Patient patient = new Patient();
+        patient.setEmail(dto.getEmail());
+        patient.setNom(dto.getNom());
+        patient.setPrenom(dto.getPrenom());
+        patient.setTelephone(dto.getTelephone());
+        patient.setDateNaissance(dto.getDateNaissance());
+        patient.setAdresse(dto.getAdresse());
+        patient.setGroupeSanguin(dto.getGroupeSanguin());
+        patient.setAllergies(dto.getAllergies());
+        patient.setAntecedents(dto.getAntecedents());
+        patient.setRole(Role.PATIENT);
+        patient.setPassword(passwordEncoder.encode(password != null && !password.isBlank() ? password : "Changeme@2026"));
+        patient.setEnabled(true);
 
         patient = patientRepository.save(patient);
         return toDTO(patient);

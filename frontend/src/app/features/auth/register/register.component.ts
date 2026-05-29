@@ -2,13 +2,16 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, InputTextModule, ButtonModule, ToastModule],
   template: `
     <div class="register-page">
       <div class="register-container animate-slideUp">
@@ -62,7 +65,7 @@ import { environment } from '../../../../environments/environment';
                     <path d="M20 21a8 8 0 0 0-16 0"/>
                   </svg>
                 </span>
-                <input type="text" id="prenom" class="form-control" formControlName="prenom" placeholder="Votre prenom">
+                <input type="text" id="prenom" pInputText class="form-control" formControlName="prenom" placeholder="Votre prenom">
               </div>
             </div>
             <div class="form-group">
@@ -74,7 +77,7 @@ import { environment } from '../../../../environments/environment';
                     <path d="M20 21a8 8 0 0 0-16 0"/>
                   </svg>
                 </span>
-                <input type="text" id="nom" class="form-control" formControlName="nom" placeholder="Votre nom">
+                <input type="text" id="nom" pInputText class="form-control" formControlName="nom" placeholder="Votre nom">
               </div>
             </div>
           </div>
@@ -88,7 +91,7 @@ import { environment } from '../../../../environments/environment';
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
               </span>
-              <input type="email" id="email" class="form-control" formControlName="email" placeholder="votre@email.com">
+              <input type="email" id="email" pInputText class="form-control" formControlName="email" placeholder="votre@email.com">
             </div>
             @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
               <span class="error-message">Veuillez entrer une adresse email valide</span>
@@ -103,7 +106,7 @@ import { environment } from '../../../../environments/environment';
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
               </span>
-              <input type="tel" id="telephone" class="form-control" formControlName="telephone" placeholder="06XX-XXX-XXX">
+              <input type="tel" id="telephone" pInputText class="form-control" formControlName="telephone" placeholder="06XX-XXX-XXX">
             </div>
           </div>
 
@@ -119,7 +122,7 @@ import { environment } from '../../../../environments/environment';
               <input
                 [type]="showPassword ? 'text' : 'password'"
                 id="password"
-                class="form-control"
+                pInputText class="form-control"
                 formControlName="password"
                 placeholder="Minimum 8 caracteres"
                 (input)="updatePasswordStrength()"
@@ -167,7 +170,7 @@ import { environment } from '../../../../environments/environment';
                     <path d="M3 10h18"/>
                   </svg>
                 </span>
-                <input type="date" id="dateNaissance" class="form-control" formControlName="dateNaissance">
+                <input type="date" id="dateNaissance" pInputText class="form-control" formControlName="dateNaissance">
               </div>
             </div>
             <div class="form-group">
@@ -179,7 +182,7 @@ import { environment } from '../../../../environments/environment';
                     <circle cx="12" cy="10" r="3"/>
                   </svg>
                 </span>
-                <select id="ville" class="form-control" formControlName="ville">
+                <select id="ville" pInputText class="form-control" formControlName="ville">
                   <option value="">Selectionnez...</option>
                   <option value="Casablanca">Casablanca</option>
                   <option value="Rabat">Rabat</option>
@@ -205,7 +208,7 @@ import { environment } from '../../../../environments/environment';
                   <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
               </span>
-              <input type="text" id="adresse" class="form-control" formControlName="adresse" placeholder="Votre adresse complete">
+              <input type="text" id="adresse" pInputText class="form-control" formControlName="adresse" placeholder="Votre adresse complete">
             </div>
           </div>
 

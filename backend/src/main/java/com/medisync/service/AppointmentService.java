@@ -39,6 +39,18 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    public List<AppointmentDTO> getAllAppointmentsByDate(LocalDate date) {
+        return appointmentRepository.findByDate(date).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<AppointmentDTO> getAllAppointmentsBetween(LocalDate start, LocalDate end) {
+        return appointmentRepository.findByDateBetween(start, end).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<AppointmentDTO> getAppointmentsByMedecinBetweenDates(Long medecinId, LocalDate start, LocalDate end) {
         return appointmentRepository.findByMedecinIdAndDateBetween(medecinId, start, end).stream()
                 .map(this::toDTO)

@@ -50,4 +50,15 @@ public class Medecin extends User {
 
     @OneToMany(mappedBy = "medecin", cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
+
+    /** Tarif minimum applicable par la clinique (150 DH). */
+    public static final BigDecimal TARIF_MINIMUM = new BigDecimal("150.00");
+
+    @PrePersist
+    @PreUpdate
+    private void enforceTarifMinimum() {
+        if (tarifConsultation == null || tarifConsultation.compareTo(TARIF_MINIMUM) < 0) {
+            tarifConsultation = TARIF_MINIMUM;
+        }
+    }
 }

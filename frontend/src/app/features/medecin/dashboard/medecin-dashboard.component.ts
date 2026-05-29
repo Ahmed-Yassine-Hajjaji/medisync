@@ -1,6 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FullCalendarModule } from '@fullcalendar/angular';
+import { CalendarOptions, EventInput } from '@fullcalendar/core';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import frLocale from '@fullcalendar/core/locales/fr';
+
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { BadgeModule } from 'primeng/badge';
+import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Appointment } from '../../../core/models/appointment.model';
@@ -8,200 +23,208 @@ import { Appointment } from '../../../core/models/appointment.model';
 @Component({
   selector: 'app-medecin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule, RouterModule, FullCalendarModule,
+    CardModule, ButtonModule, BadgeModule, TagModule, DialogModule, ToastModule
+  ],
+  providers: [MessageService],
   template: `
-    <div class="container">
-      <div class="page-header">
+    <p-toast></p-toast>
+
+    <header class="dash-header">
+      <div>
         <h1>Bonjour, Dr. {{ userName }}</h1>
-        <p>{{ today | date:'EEEE d MMMM yyyy' }}</p>
+        <p class="date-fr">{{ todayFrench }}</p>
       </div>
+      <p-button
+        label="Ajouter urgence"
+        icon="pi pi-exclamation-triangle"
+        styleClass="p-button-danger p-button-lg"
+        (onClick)="showUrgenceDialog = true"></p-button>
+    </header>
 
-      <div class="stats-grid">
-        <div class="stat-card card">
-          <div class="stat-value">{{ todayAppointments.length }}</div>
-          <div class="stat-label">RDV aujourd'hui</div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-value">{{ pendingAppointments.length }}</div>
-          <div class="stat-label">En attente</div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-value">{{ confirmedAppointments.length }}</div>
-          <div class="stat-label">Confirmes</div>
-        </div>
-      </div>
-
-      <div class="quick-actions">
-        <a routerLink="planning" class="action-card card">
-          <div class="action-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 2v4"/>
-              <path d="M16 2v4"/>
-              <rect width="18" height="18" x="3" y="4" rx="2"/>
-              <path d="M3 10h18"/>
-            </svg>
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <p-card>
+        <div class="kpi">
+          <i class="pi pi-calendar-clock kpi-icon-blue"></i>
+          <div>
+            <div class="kpi-value">{{ todayAppointments.length }}</div>
+            <div class="kpi-label">RDV aujourd'hui</div>
           </div>
-          <h3>Mon planning</h3>
-          <p>Gerer mes disponibilites</p>
-        </a>
-        <a routerLink="consultations" class="action-card card">
-          <div class="action-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <path d="M14 2v6h6"/>
-              <path d="M16 13H8"/>
-              <path d="M16 17H8"/>
-              <path d="M10 9H8"/>
-            </svg>
+        </div>
+      </p-card>
+      <p-card>
+        <div class="kpi">
+          <i class="pi pi-clock kpi-icon-orange"></i>
+          <div>
+            <div class="kpi-value">{{ pendingCount }}</div>
+            <div class="kpi-label">En attente</div>
           </div>
-          <h3>Consultations</h3>
-          <p>Gerer les dossiers patients</p>
-        </a>
-      </div>
+        </div>
+      </p-card>
+      <p-card>
+        <div class="kpi">
+          <i class="pi pi-check-circle kpi-icon-green"></i>
+          <div>
+            <div class="kpi-value">{{ confirmedCount }}</div>
+            <div class="kpi-label">Confirmés</div>
+          </div>
+        </div>
+      </p-card>
+      <p-card>
+        <div class="kpi">
+          <i class="pi pi-users kpi-icon-purple"></i>
+          <div>
+            <div class="kpi-value">{{ uniquePatientsToday }}</div>
+            <div class="kpi-label">Patients du jour</div>
+          </div>
+        </div>
+      </p-card>
+    </div>
 
-      <div class="card">
-        <h2>Rendez-vous du jour</h2>
+    <div class="content-grid">
+      <!-- Planning -->
+      <p-card styleClass="calendar-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <h2><i class="pi pi-calendar"></i> Planning de la semaine</h2>
+          </div>
+        </ng-template>
+        <full-calendar [options]="calendarOptions"></full-calendar>
+      </p-card>
+
+      <!-- Patients du jour -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <h2><i class="pi pi-users"></i> Patients du jour</h2>
+          </div>
+        </ng-template>
+
         @for (apt of todayAppointments; track apt.id) {
-          <div class="appointment-row">
-            <div class="apt-time">{{ apt.heureDebut }}</div>
-            <div class="apt-info">
+          <div class="patient-row">
+            <div class="patient-time">{{ apt.heureDebut }}</div>
+            <div class="patient-info">
               <strong>{{ apt.patientPrenom }} {{ apt.patientNom }}</strong>
-              <span>{{ apt.motif }}</span>
+              <small>{{ motifLabel(apt.motif) }}</small>
             </div>
-            <span class="badge" [class]="'badge-' + getStatusClass(apt.statut)">{{ apt.statut }}</span>
-            <div class="apt-actions">
-              @if (apt.statut === 'EN_ATTENTE') {
-                <button class="btn btn-success btn-sm" (click)="confirmAppointment(apt.id)">Confirmer</button>
-              }
-              @if (apt.statut === 'CONFIRME') {
-                <a [routerLink]="['consultations']" [queryParams]="{aptId: apt.id}" class="btn btn-primary btn-sm">Consulter</a>
-              }
-            </div>
+            <p-tag
+              [value]="statutLabel(apt.statut)"
+              [severity]="statutSeverity(apt.statut)"></p-tag>
           </div>
         } @empty {
           <p class="empty-state">Aucun rendez-vous aujourd'hui</p>
         }
-      </div>
+      </p-card>
     </div>
+
+    <!-- Dialog urgence (placeholder) -->
+    <p-dialog
+      header="Ajouter une urgence"
+      [(visible)]="showUrgenceDialog"
+      [modal]="true"
+      [style]="{width: '500px'}">
+      <p>Saisir une urgence ouvrira le formulaire de création de RDV en mode urgence.</p>
+      <p>Ce flux est intégré au module Planning. Cliquez ci-dessous pour y accéder.</p>
+      <ng-template pTemplate="footer">
+        <p-button label="Fermer" styleClass="p-button-secondary p-button-text" (onClick)="showUrgenceDialog = false"></p-button>
+        <p-button label="Aller au planning" icon="pi pi-arrow-right" routerLink="/medecin/planning" (onClick)="showUrgenceDialog = false"></p-button>
+      </ng-template>
+    </p-dialog>
   `,
   styles: [`
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      text-align: center;
-
-      .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary);
-      }
-
-      .stat-label {
-        color: var(--gray-500);
-      }
-    }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .action-card {
-      text-decoration: none;
-      color: inherit;
+    .dash-header {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-
-      &:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      }
-
-      .action-icon {
-        width: 48px;
-        height: 48px;
-        background: var(--primary-light);
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        margin-bottom: 0.75rem;
-      }
-
-      h3 {
-        margin: 0 0 0.25rem 0;
-        font-size: 1rem;
-      }
-
-      p {
-        color: var(--gray-500);
-        font-size: 0.875rem;
-        margin: 0;
-      }
-    }
-
-    h2 {
-      margin-bottom: 1rem;
-    }
-
-    .appointment-row {
-      display: flex;
+      justify-content: space-between;
       align-items: center;
+      margin-bottom: 1.5rem;
+      h1 { margin: 0; font-size: 1.5rem; }
+      .date-fr { color: var(--gray-500); font-size: 0.95rem; text-transform: capitalize; margin-top: 0.25rem; }
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
-      padding: 1rem 0;
+      margin-bottom: 1.5rem;
+      @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
+    }
+    .kpi { display: flex; align-items: center; gap: 1rem; }
+    .kpi i { font-size: 2rem; }
+    .kpi-icon-blue { color: #3B82F6; }
+    .kpi-icon-orange { color: #F59E0B; }
+    .kpi-icon-green { color: #10B981; }
+    .kpi-icon-purple { color: #8B5CF6; }
+    .kpi-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+    .kpi-label { color: var(--gray-500); font-size: 0.875rem; margin-top: 0.25rem; }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      @media (max-width: 1200px) { grid-template-columns: 1fr; }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem 0;
+      h2 { margin: 0; font-size: 1.125rem; display: flex; align-items: center; gap: 0.5rem; }
+    }
+
+    :host ::ng-deep .calendar-card .p-card-body { padding: 0.75rem 1rem 1rem; }
+    :host ::ng-deep .fc { font-family: inherit; }
+    :host ::ng-deep .fc .fc-toolbar-title { font-size: 1rem; text-transform: capitalize; }
+    :host ::ng-deep .fc .fc-button-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .patient-row {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
       border-bottom: 1px solid var(--gray-100);
-
-      .apt-time {
-        font-weight: 600;
-        font-size: 1.125rem;
-        min-width: 60px;
-      }
-
-      .apt-info {
-        flex: 1;
-
-        strong {
-          display: block;
-        }
-
-        span {
-          font-size: 0.875rem;
-          color: var(--gray-500);
-        }
-      }
-
-      .apt-actions {
-        display: flex;
-        gap: 0.5rem;
-      }
+      &:last-child { border-bottom: none; }
     }
+    .patient-time { font-weight: 600; color: var(--primary); }
+    .patient-info strong { display: block; }
+    .patient-info small { color: var(--gray-500); }
 
-    .btn-sm {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.75rem;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: var(--gray-500);
-    }
+    .empty-state { text-align: center; padding: 2rem; color: var(--gray-500); }
   `]
 })
 export class MedecinDashboardComponent implements OnInit {
   userName = '';
-  today = new Date();
+  todayFrench = '';
   todayAppointments: Appointment[] = [];
-  pendingAppointments: Appointment[] = [];
-  confirmedAppointments: Appointment[] = [];
+  pendingCount = 0;
+  confirmedCount = 0;
+  uniquePatientsToday = 0;
+  showUrgenceDialog = false;
+
+  calendarOptions: CalendarOptions = {
+    plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
+    initialView: 'timeGridWeek',
+    locale: frLocale,
+    firstDay: 1,
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
+    allDaySlot: false,
+    height: 600,
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: ''
+    },
+    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    events: []
+  };
 
   constructor(
     private appointmentService: AppointmentService,
@@ -209,34 +232,91 @@ export class MedecinDashboardComponent implements OnInit {
   ) {
     const user = this.authService.user();
     this.userName = user ? user.nom : '';
+
+    const formatter = new Intl.DateTimeFormat('fr-MA', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    this.todayFrench = formatter.format(new Date());
   }
 
   ngOnInit(): void {
     this.loadTodayAppointments();
+    this.loadWeekAppointments();
   }
 
   loadTodayAppointments(): void {
-    const todayStr = this.today.toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
     this.appointmentService.getMedecinAppointmentsByDate(todayStr).subscribe({
       next: (data) => {
-        this.todayAppointments = data;
-        this.pendingAppointments = data.filter(a => a.statut === 'EN_ATTENTE');
-        this.confirmedAppointments = data.filter(a => a.statut === 'CONFIRME');
+        this.todayAppointments = data.sort((a, b) => a.heureDebut.localeCompare(b.heureDebut));
+        this.pendingCount = data.filter(a => a.statut === 'EN_ATTENTE').length;
+        this.confirmedCount = data.filter(a => a.statut === 'CONFIRME').length;
+        this.uniquePatientsToday = new Set(data.map(a => a.patientId)).size;
       }
     });
   }
 
-  confirmAppointment(id: number): void {
-    this.appointmentService.confirmAppointment(id).subscribe({
-      next: () => this.loadTodayAppointments()
+  loadWeekAppointments(): void {
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const start = monday.toISOString().split('T')[0];
+    const end = sunday.toISOString().split('T')[0];
+
+    this.appointmentService.getMedecinAppointmentsByRange(start, end).subscribe({
+      next: (data) => {
+        const events: EventInput[] = data.map(apt => ({
+          id: String(apt.id),
+          title: `${apt.patientPrenom} ${apt.patientNom}`,
+          start: `${apt.date}T${apt.heureDebut}`,
+          end: `${apt.date}T${apt.heureFin}`,
+          backgroundColor: this.eventColor(apt),
+          borderColor: this.eventColor(apt)
+        }));
+        this.calendarOptions = { ...this.calendarOptions, events };
+      }
     });
   }
 
-  getStatusClass(statut: string): string {
-    switch (statut) {
+  eventColor(apt: Appointment): string {
+    if (apt.motif === 'URGENCE') return '#EF4444';
+    if (apt.motif === 'SUIVI') return '#F59E0B';
+    return '#3B82F6';
+  }
+
+  motifLabel(m: string): string {
+    const map: Record<string, string> = {
+      CONSULTATION_GENERALE: 'Consultation générale',
+      SUIVI: 'Suivi',
+      URGENCE: 'Urgence',
+      VACCINATION: 'Vaccination',
+      CERTIFICAT_MEDICAL: 'Certificat médical',
+      RENOUVELLEMENT_ORDONNANCE: 'Renouvellement',
+      AUTRE: 'Autre'
+    };
+    return map[m] ?? m;
+  }
+
+  statutLabel(s: string): string {
+    const map: Record<string, string> = {
+      EN_ATTENTE: 'En attente',
+      CONFIRME: 'Confirmé',
+      ANNULE: 'Annulé',
+      TERMINE: 'Terminé',
+      NO_SHOW: 'Absent'
+    };
+    return map[s] ?? s;
+  }
+
+  statutSeverity(s: string): 'success' | 'warning' | 'danger' | 'info' {
+    switch (s) {
       case 'CONFIRME': return 'success';
       case 'EN_ATTENTE': return 'warning';
-      case 'ANNULE': return 'danger';
+      case 'ANNULE':
+      case 'NO_SHOW': return 'danger';
       default: return 'info';
     }
   }
