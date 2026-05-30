@@ -43,12 +43,29 @@ public class PatientController {
     public ResponseEntity<AppointmentDTO> createAppointment(
             @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody AppointmentCreateRequest request) {
-        return ResponseEntity.ok(appointmentService.createAppointment(request, user.getId()));
+        Long targetPatientId = user.getId();
+        if (request.getPatientId() != null && !request.getPatientId().equals(user.getId())) {
+            boolean isDependant = patientService.getDependants(user.getId()).stream()
+                    .anyMatch(d -> d.getId().equals(request.getPatientId()));
+            if (!isDependant) {
+                throw new RuntimeException("Patient non autorise");
+            }
+            targetPatientId = request.getPatientId();
+        }
+        return ResponseEntity.ok(appointmentService.createAppointment(request, targetPatientId));
     }
 
     @PutMapping("/appointments/{id}/cancel")
     public ResponseEntity<AppointmentDTO> cancelAppointment(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.cancelAppointment(id));
+    }
+
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentDTO> rescheduleAppointment(
+            @PathVariable Long id,
+            @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(
+                appointmentService.rescheduleAppointment(id, request.getNewDate(), request.getNewTimeSlot()));
     }
 
     @GetMapping("/consultations")

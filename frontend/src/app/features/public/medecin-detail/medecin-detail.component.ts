@@ -5,7 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { MedecinService } from '../../../core/services/medecin.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Medecin } from '../../../core/models/user.model';
+import { PatientService } from '../../../core/services/patient.service';
+import { Medecin, Patient } from '../../../core/models/user.model';
 import { Creneau, MotifConsultation } from '../../../core/models/appointment.model';
 import { Review } from '../../../core/models/consultation.model';
 
@@ -197,6 +198,25 @@ interface CalendarDay {
               <!-- Motif & Confirmation -->
               @if (selectedCreneau) {
                 <div class="booking-form">
+                  @if (dependants.length > 0) {
+                    <div class="form-group">
+                      <label>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Pour qui ?
+                      </label>
+                      <select [(ngModel)]="selectedPatientId" class="select-motif">
+                        <option [ngValue]="null">Pour moi</option>
+                        @for (dep of dependants; track dep.id) {
+                          <option [ngValue]="dep.id">{{ dep.prenom }} {{ dep.nom }}</option>
+                        }
+                      </select>
+                    </div>
+                  }
                   <div class="form-group">
                     <label>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -907,6 +927,8 @@ export class MedecinDetailComponent implements OnInit {
   selectedDate = '';
   selectedCreneau: Creneau | null = null;
   selectedMotif: MotifConsultation = 'CONSULTATION_GENERALE';
+  dependants: Patient[] = [];
+  selectedPatientId: number | null = null;
   booking = false;
   bookingSuccess = false;
   bookingError = '';
@@ -921,7 +943,8 @@ export class MedecinDetailComponent implements OnInit {
     private router: Router,
     private medecinService: MedecinService,
     private appointmentService: AppointmentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private patientService: PatientService
   ) {}
 
   ngOnInit(): void {
@@ -929,6 +952,16 @@ export class MedecinDetailComponent implements OnInit {
     this.loadMedecin(id);
     this.loadReviews(id);
     this.initCalendar();
+    if (this.isAuthenticated()) {
+      this.loadDependants();
+    }
+  }
+
+  loadDependants(): void {
+    this.patientService.getDependants().subscribe({
+      next: (data) => this.dependants = data,
+      error: () => this.dependants = []
+    });
   }
 
   isAuthenticated(): boolean {
@@ -1073,7 +1106,8 @@ export class MedecinDetailComponent implements OnInit {
       medecinId: this.medecin.id,
       date: this.selectedDate,
       heureDebut: this.selectedCreneau.heureDebut,
-      motif: this.selectedMotif
+      motif: this.selectedMotif,
+      ...(this.selectedPatientId ? { patientId: this.selectedPatientId } : {})
     }).subscribe({
       next: () => {
         this.bookingSuccess = true;

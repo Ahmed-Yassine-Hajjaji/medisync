@@ -215,7 +215,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen> {
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
-                      child: FilledButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: _openInMaps,
                         icon: const Icon(Icons.directions),
                         label: const Text('Obtenir l\'itineraire'),

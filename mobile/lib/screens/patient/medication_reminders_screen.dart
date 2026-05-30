@@ -248,7 +248,7 @@ class _AddReminderDialogState extends State<_AddReminderDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Annuler'),
         ),
-        FilledButton(
+        ElevatedButton(
           onPressed: () {
             if (_medicamentController.text.isNotEmpty) {
               widget.onAdd(MedicationReminder(

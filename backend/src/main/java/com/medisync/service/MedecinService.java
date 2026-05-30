@@ -42,6 +42,15 @@ public class MedecinService {
                 .collect(Collectors.toList());
     }
 
+    public List<MedecinDTO> getMedecinsByLangue(String langue) {
+        String needle = langue.toLowerCase();
+        return medecinRepository.findAll().stream()
+                .filter(m -> m.getLanguesParlees() != null
+                        && m.getLanguesParlees().toLowerCase().contains(needle))
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public List<MedecinDTO> searchMedecins(String search) {
         return medecinRepository.searchByNomOrPrenom(search).stream()
                 .map(this::toDTO)

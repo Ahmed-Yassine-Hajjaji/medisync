@@ -24,6 +24,10 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'security',
         loadComponent: () => import('./two-factor-setup/two-factor-setup.component').then(m => m.TwoFactorSetupComponent)
+      },
+      {
+        path: 'audit',
+        loadComponent: () => import('./audit/audit-log.component').then(m => m.AuditLogComponent)
       }
     ]
   }

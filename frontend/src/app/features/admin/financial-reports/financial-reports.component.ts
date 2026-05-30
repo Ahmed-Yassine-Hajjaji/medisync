@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import * as XLSX from 'xlsx';
 import { environment } from '../../../../environments/environment';
 
 interface FinancialStats {
@@ -39,6 +40,7 @@ interface RevenueByDoctor {
           <span>a</span>
           <input type="date" [(ngModel)]="endDate" (change)="loadData()">
           <button class="btn-export" (click)="exportReport()">Exporter PDF</button>
+          <button class="btn-export btn-excel" (click)="exportExcel()">Export Excel</button>
         </div>
       </header>
 
@@ -178,6 +180,7 @@ interface RevenueByDoctor {
     .date-range input { padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; }
     .date-range span { color: #666; }
     .btn-export { padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .btn-excel { background: #1976d2; }
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
     .kpi-card { display: flex; align-items: center; gap: 16px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .kpi-icon { font-size: 32px; }
@@ -379,5 +382,38 @@ export class FinancialReportsComponent implements OnInit {
       `${environment.apiUrl}/admin/financial/export?start=${this.startDate}&end=${this.endDate}&format=pdf`,
       '_blank'
     );
+  }
+
+  exportExcel(): void {
+    const wb = XLSX.utils.book_new();
+
+    const synthese = [
+      { Indicateur: "Chiffre d'affaires", 'Montant (DH)': this.stats.totalRevenue },
+      { Indicateur: 'Payé', 'Montant (DH)': this.stats.totalPaid },
+      { Indicateur: 'En attente', 'Montant (DH)': this.stats.totalPending },
+      { Indicateur: 'Impayé', 'Montant (DH)': this.stats.totalOverdue },
+      { Indicateur: 'Rendez-vous', 'Montant (DH)': this.stats.appointmentsCount },
+      { Indicateur: 'Consultations', 'Montant (DH)': this.stats.consultationsCount },
+      { Indicateur: 'Panier moyen', 'Montant (DH)': Math.round(this.averageTicket) },
+      { Indicateur: "Taux d'encaissement (%)", 'Montant (DH)': Math.round(this.paymentRate) },
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(synthese), 'Synthèse');
+
+    const parMois = this.revenueByMonth.map(m => ({ Mois: m.name, 'CA (DH)': m.value }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(parMois), 'CA par mois');
+
+    const parMedecin = this.revenueByDoctor.map(d => ({ Médecin: d.name, 'CA (DH)': d.value }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(parMedecin), 'CA par médecin');
+
+    const factures = this.recentInvoices.map(inv => ({
+      'N° Facture': inv.numeroFacture,
+      Patient: inv.patientNom,
+      Date: inv.dateFacture,
+      'Montant (DH)': inv.montantTotal,
+      Statut: this.getStatusLabel(inv.statut),
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(factures), 'Factures');
+
+    XLSX.writeFile(wb, `rapport-financier_${this.startDate}_${this.endDate}.xlsx`);
   }
 }

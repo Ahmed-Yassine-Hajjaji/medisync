@@ -21,7 +21,11 @@ public class PublicController {
     private final ReviewService reviewService;
 
     @GetMapping("/medecins")
-    public ResponseEntity<List<MedecinDTO>> getAllMedecins() {
+    public ResponseEntity<List<MedecinDTO>> getAllMedecins(
+            @RequestParam(required = false) String langue) {
+        if (langue != null && !langue.isBlank()) {
+            return ResponseEntity.ok(medecinService.getMedecinsByLangue(langue));
+        }
         return ResponseEntity.ok(medecinService.getAllMedecins());
     }
 

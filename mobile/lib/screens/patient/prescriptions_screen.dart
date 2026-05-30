@@ -7,6 +7,8 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
 import '../../models/consultation.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
 
 class PrescriptionsScreen extends StatefulWidget {
   const PrescriptionsScreen({super.key});
@@ -28,6 +30,7 @@ class _PrescriptionsScreenState extends State<PrescriptionsScreen> {
   }
 
   Future<void> _loadPrescriptions() async {
+    if (mounted) setState(() => _isLoading = true);
     try {
       final prescriptions = await _apiService.getMyPrescriptions();
       if (mounted) {
@@ -37,7 +40,33 @@ class _PrescriptionsScreenState extends State<PrescriptionsScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ErrorHandler.showError(context, e);
+      }
+    }
+  }
+
+  Future<void> _requestRenewal(Prescription prescription) async {
+    if (prescription.id == null) return;
+    try {
+      await _apiService.requestPrescriptionRenewal(prescription.id!);
+      if (mounted) {
+        ErrorHandler.showMessage(
+          context,
+          'Demande de renouvellement envoyee',
+        );
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showError(context, e);
+    }
+  }
+
+  Future<void> _downloadPdfSafe(Prescription prescription) async {
+    try {
+      await _downloadPdf(prescription);
+    } catch (e) {
+      if (mounted) ErrorHandler.showError(context, e);
     }
   }
 
@@ -104,45 +133,99 @@ class _PrescriptionsScreenState extends State<PrescriptionsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _prescriptions.isEmpty
-              ? const Center(child: Text('Aucune ordonnance'))
+              ? _buildEmpty()
               : RefreshIndicator(
                   onRefresh: _loadPrescriptions,
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     itemCount: _prescriptions.length,
                     itemBuilder: (context, index) {
                       final prescription = _prescriptions[index];
                       final isActive = prescription.dateFin != null &&
-                          DateTime.parse(prescription.dateFin!).isAfter(DateTime.now());
+                          DateTime.parse(prescription.dateFin!)
+                              .isAfter(DateTime.now());
 
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isActive ? Colors.green : Colors.grey,
-                            child: const Icon(Icons.medication, color: Colors.white),
-                          ),
-                          title: Text(prescription.medicament),
-                          subtitle: Column(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${prescription.dosage} - ${prescription.frequence}'),
-                              Text(
-                                'Du ${prescription.dateDebut} au ${prescription.dateFin ?? "..."}',
-                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: isActive
+                                        ? AppColors.success
+                                        : Colors.grey,
+                                    child: const Icon(Icons.medication,
+                                        color: Colors.white),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          prescription.medicament,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          '${prescription.dosage} - ${prescription.frequence}',
+                                        ),
+                                        Text(
+                                          'Du ${prescription.dateDebut} au ${prescription.dateFin ?? "..."}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.download,
+                                        color: AppColors.primary),
+                                    tooltip: 'Telecharger en PDF',
+                                    onPressed: () =>
+                                        _downloadPdfSafe(prescription),
+                                  ),
+                                ],
                               ),
+                              if (prescription.renouvellementAutorise) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _requestRenewal(prescription),
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    label: const Text('Demander renouvellement'),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.download),
-                            onPressed: () => _downloadPdf(prescription),
-                          ),
-                          isThreeLine: true,
                         ),
                       );
                     },
                   ),
                 ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.medication_outlined,
+              size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: AppSpacing.md),
+          const Text('Aucune ordonnance'),
+        ],
+      ),
     );
   }
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class AdminService {
     private final AppointmentRepository appointmentRepository;
     private final InvoiceRepository invoiceRepository;
     private final ConsultationRepository consultationRepository;
+    private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DashboardStatsDTO getDashboardStats() {
@@ -149,6 +151,43 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
 
         user.setEnabled(enabled);
+    }
+
+    public List<AuditLogDTO> getAuditLogs(String action, LocalDate from, LocalDate to) {
+        List<AuditLog> logs;
+        boolean hasAction = action != null && !action.isBlank();
+        boolean hasRange = from != null && to != null;
+
+        if (hasAction && hasRange) {
+            logs = auditLogRepository.findByActionAndTimestampBetweenOrderByTimestampDesc(
+                    action, from.atStartOfDay(), to.atTime(LocalTime.MAX));
+        } else if (hasAction) {
+            logs = auditLogRepository.findByActionOrderByTimestampDesc(action);
+        } else if (hasRange) {
+            logs = auditLogRepository.findByTimestampBetweenOrderByTimestampDesc(
+                    from.atStartOfDay(), to.atTime(LocalTime.MAX));
+        } else {
+            logs = auditLogRepository.findAllByOrderByTimestampDesc();
+        }
+
+        return logs.stream().map(this::toAuditLogDTO).toList();
+    }
+
+    private AuditLogDTO toAuditLogDTO(AuditLog log) {
+        AuditLogDTO dto = new AuditLogDTO();
+        dto.setId(log.getId());
+        if (log.getUser() != null) {
+            dto.setUtilisateur(log.getUser().getPrenom() + " " + log.getUser().getNom());
+        } else {
+            dto.setUtilisateur("Système");
+        }
+        dto.setAction(log.getAction());
+        dto.setEntite(log.getEntite());
+        dto.setEntiteId(log.getEntiteId());
+        dto.setDetails(log.getDetails());
+        dto.setAdresseIp(log.getAdresseIp());
+        dto.setTimestamp(log.getTimestamp());
+        return dto;
     }
 
     private MedecinDTO toMedecinDTO(Medecin m) {

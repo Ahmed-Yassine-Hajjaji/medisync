@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../models/user.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final Medecin medecin;
@@ -52,7 +54,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ErrorHandler.showError(context, e);
+      }
     }
   }
 
@@ -81,19 +86,12 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         motif: _selectedMotif,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rendez-vous confirme!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ErrorHandler.showMessage(context, 'Rendez-vous confirme !');
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
-        );
+        ErrorHandler.showError(context, e);
         setState(() => _isBooking = false);
       }
     }
@@ -113,7 +111,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             Card(
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: AppColors.primary,
                   child: Text(
                     '${widget.medecin.prenom[0]}${widget.medecin.nom[0]}',
                     style: const TextStyle(color: Colors.white),
@@ -131,8 +129,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
+                  color: Colors.white,
                   border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.radius),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,7 +167,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                         ? (selected) => setState(() => _selectedCreneau = creneau)
                         : null,
                     backgroundColor: creneau.disponible ? null : Colors.grey.shade200,
-                    selectedColor: Theme.of(context).colorScheme.primary,
+                    selectedColor: AppColors.primary,
                     labelStyle: TextStyle(
                       color: isSelected
                           ? Colors.white
@@ -184,9 +183,6 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedMotif,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
               items: _motifs.map((m) {
                 return DropdownMenuItem(value: m['value'], child: Text(m['label']!));
               }).toList(),
@@ -195,7 +191,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
+              child: ElevatedButton(
                 onPressed: _selectedCreneau != null && !_isBooking
                     ? _bookAppointment
                     : null,

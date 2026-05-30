@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,18 +33,23 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
 
-    final success = await context.read<AuthService>().login(
-      _emailController.text,
-      _passwordController.text,
-    );
+    try {
+      final success = await context.read<AuthService>().login(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
 
-    if (mounted) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (success) {
         Navigator.pushReplacementNamed(context, '/patient');
       } else {
         setState(() => _error = 'Email ou mot de passe incorrect');
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ErrorHandler.showError(context, e);
     }
   }
 
@@ -62,19 +69,19 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                Icon(
+                const Icon(
                   Icons.local_hospital,
                   size: 80,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.primary,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'MediSync',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
                 ),
                 const SizedBox(height: 48),
                 if (_error != null)
@@ -96,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -112,7 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Mot de passe',
                     prefixIcon: Icon(Icons.lock_outlined),
-                    border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -122,13 +127,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                FilledButton(
+                ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
                       : const Text('Se connecter'),
                 ),

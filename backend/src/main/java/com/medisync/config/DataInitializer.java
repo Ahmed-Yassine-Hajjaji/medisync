@@ -25,9 +25,19 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        seedIfEmpty();
+    }
+
+    /**
+     * Initialise les donnees de demonstration uniquement si la base est vide.
+     * Retourne true si les donnees ont ete creees, false si la base etait deja peuplee.
+     */
+    public boolean seedIfEmpty() {
         if (adminRepository.count() == 0) {
             initData();
+            return true;
         }
+        return false;
     }
 
     private void initData() {

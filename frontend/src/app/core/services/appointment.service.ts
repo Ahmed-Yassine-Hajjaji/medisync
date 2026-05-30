@@ -26,6 +26,10 @@ export class AppointmentService {
     return this.http.put<Appointment>(`${this.patientUrl}/${id}/cancel`, {});
   }
 
+  reschedulePatientAppointment(id: number, newDate: string, newTimeSlot: string): Observable<Appointment> {
+    return this.http.put<Appointment>(`${this.patientUrl}/${id}/reschedule`, { newDate, newTimeSlot });
+  }
+
   getMedecinAppointments(): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(this.medecinUrl);
   }

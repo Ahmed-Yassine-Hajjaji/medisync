@@ -83,6 +83,14 @@ public class SecretaireController {
         return ResponseEntity.ok(appointmentService.cancelAppointment(id));
     }
 
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentDTO> rescheduleAppointment(
+            @PathVariable Long id,
+            @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(
+                appointmentService.rescheduleAppointment(id, request.getNewDate(), request.getNewTimeSlot()));
+    }
+
     @GetMapping("/appointments/medecin/{medecinId}/date/{date}")
     public ResponseEntity<List<AppointmentDTO>> getAppointmentsByMedecinAndDate(
             @PathVariable Long medecinId,

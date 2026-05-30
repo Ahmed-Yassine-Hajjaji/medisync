@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
+import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/patient/patient_dashboard.dart';
+import 'screens/main_scaffold.dart';
 
 void main() {
   runApp(const MediSyncApp());
@@ -19,19 +20,12 @@ class MediSyncApp extends StatelessWidget {
       child: MaterialApp(
         title: 'MediSync',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2563EB),
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          fontFamily: 'Inter',
-        ),
+        theme: AppTheme.light,
         home: const AuthWrapper(),
         routes: {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
-          '/patient': (context) => const PatientDashboard(),
+          '/patient': (context) => const MainScaffold(),
         },
       ),
     );
@@ -51,7 +45,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (auth.isAuthenticated) {
-          return const PatientDashboard();
+          return const MainScaffold();
         }
         return const HomeScreen();
       },

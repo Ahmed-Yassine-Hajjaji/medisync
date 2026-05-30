@@ -1,5 +1,6 @@
 package com.medisync.controller;
 
+import com.medisync.config.DataInitializer;
 import com.medisync.dto.*;
 import com.medisync.service.*;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class AdminController {
     private final PatientService patientService;
     private final MedecinService medecinService;
     private final ReviewService reviewService;
+    private final DataInitializer dataInitializer;
 
     @GetMapping("/dashboard")
     public ResponseEntity<DashboardStatsDTO> getDashboard() {
@@ -76,5 +78,21 @@ public class AdminController {
     @GetMapping("/reviews/reported")
     public ResponseEntity<List<ReviewDTO>> getReportedReviews() {
         return ResponseEntity.ok(reviewService.getReportedReviews());
+    }
+
+    @GetMapping("/audit")
+    public ResponseEntity<List<AuditLogDTO>> getAuditLogs(
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate from,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to) {
+        return ResponseEntity.ok(adminService.getAuditLogs(action, from, to));
+    }
+
+    @PostMapping("/init-data")
+    public ResponseEntity<String> initData() {
+        boolean seeded = dataInitializer.seedIfEmpty();
+        return ResponseEntity.ok(seeded
+                ? "Donnees de demonstration creees"
+                : "La base contient deja des donnees");
     }
 }

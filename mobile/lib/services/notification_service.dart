@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'auth_service.dart';
 
 class NotificationService {
@@ -300,10 +301,6 @@ class NotificationService {
   /// Get current FCM token
   String? get currentToken => _currentToken;
 }
-
-// Import for timezone
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz_data;
 
 /// Initialize timezone data - call this in main()
 Future<void> initializeTimezone() async {

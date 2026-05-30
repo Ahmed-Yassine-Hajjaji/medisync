@@ -8,6 +8,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart' as path;
 import 'dart:convert';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
 
 class Document {
   final int id;
@@ -77,6 +79,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _loadDocuments() async {
+    if (mounted) setState(() => _isLoading = true);
     try {
       final response = await http.get(
         Uri.parse('${AuthService.baseUrl}/patient/documents'),
@@ -91,9 +94,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             _isLoading = false;
           });
         }
+      } else {
+        throw Exception('Erreur ${response.statusCode}');
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ErrorHandler.showError(context, e);
+      }
     }
   }
 
@@ -209,7 +217,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Annuler'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _uploadFile(file, selectedCat);
@@ -275,11 +283,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
       if (response.statusCode == 200) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Document telecharge avec succes'),
-              backgroundColor: Colors.green,
-            ),
+          ErrorHandler.showMessage(
+            context,
+            'Document telecharge avec succes',
           );
           _loadDocuments();
         }
@@ -288,12 +294,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ErrorHandler.showError(context, e);
       }
     } finally {
       if (mounted) {
@@ -316,9 +317,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Annuler'),
           ),
-          FilledButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             child: const Text('Supprimer'),
           ),
         ],
@@ -338,16 +339,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           setState(() {
             _documents.removeWhere((d) => d.id == doc.id);
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Document supprime')),
-          );
+          ErrorHandler.showMessage(context, 'Document supprime');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
-        );
+        ErrorHandler.showError(context, e);
       }
     }
   }

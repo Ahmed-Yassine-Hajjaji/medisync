@@ -20,5 +20,6 @@ export class AdminLayoutComponent {
     { route: '/admin/financial', label: 'Finances',        icon: 'chart' },
     { route: '/admin/rooms',     label: 'Salles',          icon: 'door' },
     { route: '/admin/security',  label: 'Sécurité 2FA',    icon: 'shield' },
+    { route: '/admin/audit',     label: "Journal d'audit", icon: 'fileText' },
   ];
 }

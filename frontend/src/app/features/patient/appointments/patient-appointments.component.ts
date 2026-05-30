@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AppointmentService } from '../../../core/services/appointment.service';
-import { Appointment } from '../../../core/models/appointment.model';
+import { MedecinService } from '../../../core/services/medecin.service';
+import { Appointment, Creneau } from '../../../core/models/appointment.model';
 
 @Component({
   selector: 'app-patient-appointments',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="appointments-page">
       <div class="page-header">
@@ -89,14 +91,23 @@ import { Appointment } from '../../../core/models/appointment.model';
                       }
                       {{ getStatusLabel(apt.statut) }}
                     </span>
-                    <button class="btn-cancel" (click)="cancelAppointment(apt.id)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="m15 9-6 6"/>
-                        <path d="m9 9 6 6"/>
-                      </svg>
-                      Annuler
-                    </button>
+                    <div class="apt-buttons">
+                      <button class="btn-reschedule" (click)="openReschedule(apt)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                          <path d="M3 3v5h5"/>
+                        </svg>
+                        Reprogrammer
+                      </button>
+                      <button class="btn-cancel" (click)="cancelAppointment(apt.id)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="m15 9-6 6"/>
+                          <path d="m9 9 6 6"/>
+                        </svg>
+                        Annuler
+                      </button>
+                    </div>
                   </div>
                 </div>
               }
@@ -130,6 +141,52 @@ import { Appointment } from '../../../core/models/appointment.model';
             </div>
           </div>
         }
+      }
+
+      <!-- Reschedule Dialog -->
+      @if (reschedulingApt) {
+        <div class="modal-overlay" (click)="closeReschedule()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Reprogrammer le rendez-vous</h3>
+              <button class="modal-close" (click)="closeReschedule()">&times;</button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-sub">Dr. {{ reschedulingApt.medecinPrenom }} {{ reschedulingApt.medecinNom }}</p>
+
+              <label class="field-label">Nouvelle date</label>
+              <input type="date" [(ngModel)]="rescheduleDate" [min]="minDate" (change)="loadRescheduleCreneaux()" class="date-input">
+
+              @if (rescheduleDate) {
+                @if (loadingCreneaux) {
+                  <p class="hint">Chargement des créneaux...</p>
+                } @else if (rescheduleCreneaux.length > 0) {
+                  <label class="field-label">Créneau disponible</label>
+                  <div class="creneaux-grid">
+                    @for (c of rescheduleCreneaux; track c.heureDebut) {
+                      <button class="creneau-btn"
+                        [class.selected]="selectedCreneau?.heureDebut === c.heureDebut"
+                        [disabled]="!c.disponible"
+                        (click)="selectedCreneau = c">
+                        {{ c.heureDebut }}
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <p class="hint">Aucun créneau disponible à cette date.</p>
+                }
+              }
+
+              @if (rescheduleError) { <p class="error">{{ rescheduleError }}</p> }
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" (click)="closeReschedule()">Annuler</button>
+              <button class="btn" [disabled]="!selectedCreneau || saving" (click)="confirmReschedule()">
+                {{ saving ? 'Enregistrement...' : 'Confirmer' }}
+              </button>
+            </div>
+          </div>
+        </div>
       }
     </div>
   `,
@@ -362,6 +419,29 @@ import { Appointment } from '../../../core/models/appointment.model';
       }
     }
 
+    .apt-buttons { display: flex; gap: 0.5rem; }
+
+    .btn-reschedule {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      font-size: 0.8125rem;
+      font-family: inherit;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: var(--primary-light, #EAF2FD);
+        border-color: var(--primary, #1E6FD9);
+        color: var(--primary, #1E6FD9);
+      }
+    }
+
     .btn-cancel {
       display: flex;
       align-items: center;
@@ -382,6 +462,49 @@ import { Appointment } from '../../../core/models/appointment.model';
         color: #DC2626;
       }
     }
+
+    /* Reschedule modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+    }
+    .modal {
+      background: #fff; border-radius: 14px; width: 100%; max-width: 460px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--gray-100);
+      h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--gray-900); }
+    }
+    .modal-close { background: none; border: none; font-size: 1.6rem; line-height: 1; color: var(--gray-400); cursor: pointer; }
+    .modal-body { padding: 1.25rem; }
+    .modal-sub { margin: 0 0 1rem; color: var(--primary, #1E6FD9); font-weight: 600; }
+    .field-label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--gray-600); margin: 0.75rem 0 0.4rem; }
+    .date-input {
+      width: 100%; padding: 0.6rem 0.75rem; border: 1.5px solid var(--gray-200);
+      border-radius: 8px; font-family: inherit; font-size: 0.9rem;
+    }
+    .creneaux-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+    .creneau-btn {
+      padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 8px;
+      background: #fff; cursor: pointer; font-family: inherit; font-size: 0.85rem;
+      &:hover:not(:disabled) { border-color: var(--primary, #1E6FD9); }
+      &.selected { background: var(--primary, #1E6FD9); color: #fff; border-color: var(--primary, #1E6FD9); }
+      &:disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
+    }
+    .hint { font-size: 0.85rem; color: var(--gray-500); margin: 0.75rem 0 0; }
+    .error { font-size: 0.85rem; color: #DC2626; margin: 0.75rem 0 0; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 0.6rem;
+      padding: 1rem 1.25rem; border-top: 1px solid var(--gray-100);
+    }
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--gray-200); border-radius: 8px;
+      padding: 0.55rem 1rem; font-family: inherit; font-weight: 500; color: var(--gray-600); cursor: pointer;
+    }
+    .modal-footer .btn { padding: 0.55rem 1.25rem; }
+    .modal-footer .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Past Appointments List */
     .appointments-list {
@@ -464,7 +587,20 @@ export class PatientAppointmentsComponent implements OnInit {
 
   private months = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  constructor(private appointmentService: AppointmentService) {}
+  // Reschedule dialog state
+  reschedulingApt: Appointment | null = null;
+  rescheduleDate = '';
+  rescheduleCreneaux: Creneau[] = [];
+  selectedCreneau: Creneau | null = null;
+  loadingCreneaux = false;
+  saving = false;
+  rescheduleError = '';
+  minDate = new Date().toISOString().split('T')[0];
+
+  constructor(
+    private appointmentService: AppointmentService,
+    private medecinService: MedecinService,
+  ) {}
 
   ngOnInit(): void {
     this.loadAppointments();
@@ -500,6 +636,42 @@ export class PatientAppointmentsComponent implements OnInit {
         next: () => this.loadAppointments()
       });
     }
+  }
+
+  openReschedule(apt: Appointment): void {
+    this.reschedulingApt = apt;
+    this.rescheduleDate = '';
+    this.rescheduleCreneaux = [];
+    this.selectedCreneau = null;
+    this.rescheduleError = '';
+  }
+
+  closeReschedule(): void {
+    this.reschedulingApt = null;
+  }
+
+  loadRescheduleCreneaux(): void {
+    if (!this.reschedulingApt || !this.rescheduleDate) return;
+    this.selectedCreneau = null;
+    this.loadingCreneaux = true;
+    this.medecinService.getCreneauxDisponibles(this.reschedulingApt.medecinId, this.rescheduleDate).subscribe({
+      next: (data) => { this.rescheduleCreneaux = data; this.loadingCreneaux = false; },
+      error: () => { this.rescheduleCreneaux = []; this.loadingCreneaux = false; this.rescheduleError = 'Erreur lors du chargement des créneaux.'; }
+    });
+  }
+
+  confirmReschedule(): void {
+    if (!this.reschedulingApt || !this.selectedCreneau) return;
+    this.saving = true;
+    this.rescheduleError = '';
+    this.appointmentService.reschedulePatientAppointment(
+      this.reschedulingApt.id,
+      this.rescheduleDate,
+      this.selectedCreneau.heureDebut
+    ).subscribe({
+      next: () => { this.saving = false; this.closeReschedule(); this.loadAppointments(); },
+      error: () => { this.saving = false; this.rescheduleError = 'Impossible de reprogrammer le rendez-vous.'; }
+    });
   }
 
   getDay(dateStr: string): string {

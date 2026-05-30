@@ -118,6 +118,23 @@ public class AppointmentService {
         updateAppointmentStatus(id, StatutAppointment.NO_SHOW);
     }
 
+    @Transactional
+    public AppointmentDTO rescheduleAppointment(Long id, java.time.LocalDate newDate, java.time.LocalTime newTimeSlot) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rendez-vous non trouve"));
+
+        int duree = appointment.getMedecin().getDureeConsultation();
+        appointment.setDate(newDate);
+        appointment.setHeureDebut(newTimeSlot);
+        appointment.setHeureFin(newTimeSlot.plusMinutes(duree));
+        appointment.setStatut(StatutAppointment.EN_ATTENTE);
+
+        appointment = appointmentRepository.save(appointment);
+        emailService.sendAppointmentConfirmation(appointment);
+
+        return toDTO(appointment);
+    }
+
     private AppointmentDTO toDTO(Appointment apt) {
         AppointmentDTO dto = new AppointmentDTO();
         dto.setId(apt.getId());
