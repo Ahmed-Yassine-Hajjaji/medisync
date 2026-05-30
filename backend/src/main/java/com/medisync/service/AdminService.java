@@ -12,9 +12,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,6 +157,111 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
 
         user.setEnabled(enabled);
+    }
+
+    public Map<String, Object> getFinancialStats(LocalDate start, LocalDate end) {
+        List<Invoice> invoices = invoiceRepository.findByDateFactureBetweenOrderByDateFactureDesc(start, end);
+
+        BigDecimal totalRevenue = invoices.stream()
+                .map(Invoice::getMontantTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPaid = invoices.stream()
+                .map(Invoice::getMontantPaye)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPending = invoices.stream()
+                .filter(i -> i.getStatut() == StatutPaiement.EN_ATTENTE || i.getStatut() == StatutPaiement.PARTIEL)
+                .map(i -> i.getMontantTotal().subtract(i.getMontantPaye()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalOverdue = invoices.stream()
+                .filter(i -> i.getStatut() == StatutPaiement.IMPAYE)
+                .map(i -> i.getMontantTotal().subtract(i.getMontantPaye()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long appointmentsCount = appointmentRepository.findByDateBetween(start, end).size();
+        long consultationsCount = consultationRepository.findByDateBetween(
+                start.atStartOfDay(), end.atTime(LocalTime.MAX)).size();
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalRevenue", totalRevenue);
+        stats.put("totalPaid", totalPaid);
+        stats.put("totalPending", totalPending);
+        stats.put("totalOverdue", totalOverdue);
+        stats.put("appointmentsCount", appointmentsCount);
+        stats.put("consultationsCount", consultationsCount);
+        return stats;
+    }
+
+    public List<Map<String, Object>> getRevenueByMonth(LocalDate start, LocalDate end) {
+        List<Invoice> invoices = invoiceRepository.findByDateFactureBetweenOrderByDateFactureDesc(start, end);
+
+        Map<String, BigDecimal> byMonth = new LinkedHashMap<>();
+        for (Invoice inv : invoices) {
+            String key = inv.getDateFacture().getMonth()
+                    .getDisplayName(TextStyle.SHORT, Locale.FRENCH)
+                    + " " + inv.getDateFacture().getYear();
+            byMonth.merge(key, inv.getMontantTotal(), BigDecimal::add);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        byMonth.forEach((name, value) -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("name", name);
+            entry.put("value", value);
+            result.add(entry);
+        });
+        result.sort(Comparator.comparing(m -> m.get("name").toString()));
+        return result;
+    }
+
+    public List<Map<String, Object>> getRevenueByDoctor(LocalDate start, LocalDate end) {
+        List<Invoice> invoices = invoiceRepository.findByDateFactureBetweenOrderByDateFactureDesc(start, end);
+
+        Map<String, BigDecimal> byDoctor = new LinkedHashMap<>();
+        for (Invoice inv : invoices) {
+            String name = "Inconnu";
+            if (inv.getConsultation() != null && inv.getConsultation().getMedecin() != null) {
+                Medecin m = inv.getConsultation().getMedecin();
+                name = "Dr. " + m.getPrenom() + " " + m.getNom();
+            }
+            byDoctor.merge(name, inv.getMontantTotal(), BigDecimal::add);
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        byDoctor.forEach((name, value) -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("name", name);
+            entry.put("value", value);
+            result.add(entry);
+        });
+        result.sort((a, b) -> ((BigDecimal) b.get("value")).compareTo((BigDecimal) a.get("value")));
+        return result;
+    }
+
+    public List<InvoiceDTO> getAllInvoicesForAdmin(LocalDate start, LocalDate end) {
+        List<Invoice> invoices;
+        if (start != null && end != null) {
+            invoices = invoiceRepository.findByDateFactureBetweenOrderByDateFactureDesc(start, end);
+        } else {
+            invoices = invoiceRepository.findAllOrderByDateDesc();
+        }
+        return invoices.stream().map(this::toInvoiceDTO).collect(Collectors.toList());
+    }
+
+    private InvoiceDTO toInvoiceDTO(Invoice invoice) {
+        InvoiceDTO dto = new InvoiceDTO();
+        dto.setId(invoice.getId());
+        dto.setNumeroFacture(invoice.getNumeroFacture());
+        dto.setPatientId(invoice.getPatient().getId());
+        dto.setPatientNom(invoice.getPatient().getPrenom() + " " + invoice.getPatient().getNom());
+        dto.setDateFacture(invoice.getDateFacture());
+        dto.setMontantTotal(invoice.getMontantTotal());
+        dto.setMontantPaye(invoice.getMontantPaye());
+        dto.setStatut(invoice.getStatut());
+        dto.setModePaiement(invoice.getModePaiement());
+        return dto;
     }
 
     public List<AuditLogDTO> getAuditLogs(String action, LocalDate from, LocalDate to) {

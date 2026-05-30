@@ -4,9 +4,12 @@ import com.medisync.config.DataInitializer;
 import com.medisync.dto.*;
 import com.medisync.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -78,6 +81,34 @@ public class AdminController {
     @GetMapping("/reviews/reported")
     public ResponseEntity<List<ReviewDTO>> getReportedReviews() {
         return ResponseEntity.ok(reviewService.getReportedReviews());
+    }
+
+    @GetMapping("/financial/stats")
+    public ResponseEntity<?> getFinancialStats(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        return ResponseEntity.ok(adminService.getFinancialStats(start, end));
+    }
+
+    @GetMapping("/financial/revenue-by-month")
+    public ResponseEntity<?> getRevenueByMonth(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        return ResponseEntity.ok(adminService.getRevenueByMonth(start, end));
+    }
+
+    @GetMapping("/financial/revenue-by-doctor")
+    public ResponseEntity<?> getRevenueByDoctor(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        return ResponseEntity.ok(adminService.getRevenueByDoctor(start, end));
+    }
+
+    @GetMapping("/invoices")
+    public ResponseEntity<List<InvoiceDTO>> getAllInvoices(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        return ResponseEntity.ok(adminService.getAllInvoicesForAdmin(start, end));
     }
 
     @GetMapping("/audit")

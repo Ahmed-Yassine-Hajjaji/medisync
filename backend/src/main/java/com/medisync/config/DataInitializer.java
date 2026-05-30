@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Component
@@ -21,6 +23,8 @@ public class DataInitializer implements CommandLineRunner {
     private final SecretaireRepository secretaireRepository;
     private final CliniqueRepository cliniqueRepository;
     private final DisponibiliteRepository disponibiliteRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -28,10 +32,6 @@ public class DataInitializer implements CommandLineRunner {
         seedIfEmpty();
     }
 
-    /**
-     * Initialise les donnees de demonstration uniquement si la base est vide.
-     * Retourne true si les donnees ont ete creees, false si la base etait deja peuplee.
-     */
     public boolean seedIfEmpty() {
         if (adminRepository.count() == 0) {
             initData();
@@ -61,7 +61,7 @@ public class DataInitializer implements CommandLineRunner {
         admin.setRole(Role.ADMIN);
         admin.setTwoFactorEnabled(false);
         admin.setClinique(clinique);
-        adminRepository.save(admin);
+        admin = adminRepository.save(admin);
 
         // Medecin Generaliste - Secteur 1 (150 DH)
         Medecin medecin1 = new Medecin();
@@ -159,20 +159,13 @@ public class DataInitializer implements CommandLineRunner {
         medecin6.setClinique(clinique);
         medecin6 = medecinRepository.save(medecin6);
 
-        // Disponibilites pour les medecins principaux
+        // Disponibilites
         for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
-            // Medecin 1 - matin et apres-midi
             createDisponibilite(medecin1, day, 9, 0, 12, 30);
             createDisponibilite(medecin1, day, 14, 0, 18, 0);
-
-            // Medecin 2 - matin seulement
             createDisponibilite(medecin2, day, 8, 30, 13, 0);
-
-            // Medecin 3 - apres-midi seulement
             createDisponibilite(medecin3, day, 14, 30, 19, 0);
         }
-
-        // Samedi matin pour certains medecins
         createDisponibilite(medecin1, DayOfWeek.SATURDAY, 9, 0, 13, 0);
         createDisponibilite(medecin4, DayOfWeek.SATURDAY, 9, 0, 13, 0);
 
@@ -196,7 +189,80 @@ public class DataInitializer implements CommandLineRunner {
         patient.setRole(Role.PATIENT);
         patient.setTelephone("0612-345-678");
         patient.setAdresse("25 Rue Hassan II, Gueliz, Marrakech");
-        patientRepository.save(patient);
+        patient = patientRepository.save(patient);
+
+        // Patients supplementaires pour la demo
+        Patient patient2 = new Patient();
+        patient2.setEmail("leila.benjelloun@test.ma");
+        patient2.setPassword(passwordEncoder.encode("Test@2026"));
+        patient2.setNom("Benjelloun");
+        patient2.setPrenom("Leila");
+        patient2.setRole(Role.PATIENT);
+        patient2.setTelephone("0622-456-789");
+        patient2 = patientRepository.save(patient2);
+
+        Patient patient3 = new Patient();
+        patient3.setEmail("omar.chraibi@test.ma");
+        patient3.setPassword(passwordEncoder.encode("Test@2026"));
+        patient3.setNom("Chraibi");
+        patient3.setPrenom("Omar");
+        patient3.setRole(Role.PATIENT);
+        patient3.setTelephone("0633-567-890");
+        patient3 = patientRepository.save(patient3);
+
+        // Factures de demonstration (derniers 3 mois)
+        LocalDate today = LocalDate.now();
+        createInvoice(patient, "FAC-2026-001", today.minusDays(2), new BigDecimal("150.00"), new BigDecimal("150.00"), StatutPaiement.PAYE, "Carte bancaire");
+        createInvoice(patient2, "FAC-2026-002", today.minusDays(5), new BigDecimal("500.00"), new BigDecimal("500.00"), StatutPaiement.PAYE, "Especes");
+        createInvoice(patient3, "FAC-2026-003", today.minusDays(7), new BigDecimal("400.00"), new BigDecimal("200.00"), StatutPaiement.PARTIEL, "Virement");
+        createInvoice(patient, "FAC-2026-004", today.minusDays(10), new BigDecimal("200.00"), BigDecimal.ZERO, StatutPaiement.IMPAYE, null);
+        createInvoice(patient2, "FAC-2026-005", today.minusDays(15), new BigDecimal("300.00"), new BigDecimal("300.00"), StatutPaiement.PAYE, "Especes");
+        createInvoice(patient3, "FAC-2026-006", today.minusDays(20), new BigDecimal("150.00"), new BigDecimal("150.00"), StatutPaiement.PAYE, "Carte bancaire");
+        createInvoice(patient, "FAC-2026-007", today.minusDays(32), new BigDecimal("700.00"), new BigDecimal("700.00"), StatutPaiement.PAYE, "Virement");
+        createInvoice(patient2, "FAC-2026-008", today.minusDays(45), new BigDecimal("500.00"), BigDecimal.ZERO, StatutPaiement.EN_ATTENTE, null);
+        createInvoice(patient3, "FAC-2026-009", today.minusDays(55), new BigDecimal("400.00"), new BigDecimal("400.00"), StatutPaiement.PAYE, "Carte bancaire");
+        createInvoice(patient, "FAC-2026-010", today.minusDays(70), new BigDecimal("150.00"), new BigDecimal("150.00"), StatutPaiement.PAYE, "Especes");
+        createInvoice(patient2, "FAC-2026-011", today.minusDays(80), new BigDecimal("200.00"), new BigDecimal("200.00"), StatutPaiement.PAYE, "Carte bancaire");
+        createInvoice(patient3, "FAC-2026-012", today.minusDays(88), new BigDecimal("300.00"), new BigDecimal("150.00"), StatutPaiement.PARTIEL, "Especes");
+
+        // Journal d'audit de demonstration
+        createAuditLog(admin, "CONNEXION", null, null, "Connexion reussie", "160.90.50.42", today.minusDays(1).atTime(8, 30));
+        createAuditLog(admin, "CREATION", "Medecin", medecin1.getId(), "Creation du compte Dr. Benali Karim", "160.90.50.42", today.minusDays(5).atTime(9, 15));
+        createAuditLog(admin, "CREATION", "Medecin", medecin2.getId(), "Creation du compte Dr. El Khaldi Fatima", "160.90.50.42", today.minusDays(5).atTime(9, 20));
+        createAuditLog(admin, "MODIFICATION", "Clinique", clinique.getId(), "Mise a jour des horaires de la clinique", "160.90.50.42", today.minusDays(3).atTime(14, 0));
+        createAuditLog(admin, "CONNEXION", null, null, "Connexion reussie", "192.168.1.10", today.minusDays(2).atTime(10, 45));
+        createAuditLog(admin, "CONSULTATION_DOSSIER", "Patient", patient.getId(), "Consultation dossier patient Idrissi Amine", "160.90.50.42", today.minusDays(1).atTime(11, 30));
+        createAuditLog(admin, "PAIEMENT", "Invoice", null, "Enregistrement paiement FAC-2026-001 : 150 DH", "160.90.50.42", today.minusDays(2).atTime(15, 0));
+        createAuditLog(admin, "SUPPRESSION", "Review", null, "Suppression avis signale comme inapproprie", "160.90.50.42", today.minusDays(4).atTime(16, 20));
+        createAuditLog(admin, "CONNEXION", null, null, "Connexion reussie", "160.90.50.42", today.atTime(8, 0));
+        createAuditLog(admin, "CREATION", "Patient", patient2.getId(), "Nouveau patient enregistre : Benjelloun Leila", "160.90.50.42", today.minusDays(10).atTime(9, 0));
+        createAuditLog(admin, "MODIFICATION", "Medecin", medecin1.getId(), "Mise a jour tarif Dr. Benali : 150 DH", "160.90.50.42", today.minusDays(8).atTime(10, 0));
+        createAuditLog(admin, "PAIEMENT", "Invoice", null, "Enregistrement paiement FAC-2026-005 : 300 DH", "160.90.50.42", today.minusDays(15).atTime(14, 30));
+    }
+
+    private void createInvoice(Patient patient, String numero, LocalDate date, BigDecimal montantTotal, BigDecimal montantPaye, StatutPaiement statut, String modePaiement) {
+        Invoice invoice = new Invoice();
+        invoice.setNumeroFacture(numero);
+        invoice.setPatient(patient);
+        invoice.setDateFacture(date);
+        invoice.setDateEcheance(date.plusDays(30));
+        invoice.setMontantTotal(montantTotal);
+        invoice.setMontantPaye(montantPaye);
+        invoice.setStatut(statut);
+        invoice.setModePaiement(modePaiement);
+        invoiceRepository.save(invoice);
+    }
+
+    private void createAuditLog(User user, String action, String entite, Long entiteId, String details, String ip, LocalDateTime timestamp) {
+        AuditLog log = new AuditLog();
+        log.setUser(user);
+        log.setAction(action);
+        log.setEntite(entite);
+        log.setEntiteId(entiteId);
+        log.setDetails(details);
+        log.setAdresseIp(ip);
+        log.setTimestamp(timestamp);
+        auditLogRepository.save(log);
     }
 
     private void createDisponibilite(Medecin medecin, DayOfWeek day, int startHour, int startMin, int endHour, int endMin) {

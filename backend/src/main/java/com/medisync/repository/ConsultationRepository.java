@@ -17,4 +17,7 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
     @Query("SELECT COUNT(c) FROM Consultation c WHERE c.medecin.id = :medecinId")
     Long countByMedecinId(Long medecinId);
+
+    @Query("SELECT c FROM Consultation c WHERE c.dateConsultation BETWEEN :start AND :end")
+    List<Consultation> findByDateBetween(LocalDateTime start, LocalDateTime end);
 }

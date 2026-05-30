@@ -24,4 +24,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @Query("SELECT SUM(i.montantPaye) FROM Invoice i WHERE i.dateFacture BETWEEN :startDate AND :endDate")
     BigDecimal getTotalPaidBetween(LocalDate startDate, LocalDate endDate);
+
+    List<Invoice> findByDateFactureBetweenOrderByDateFactureDesc(LocalDate start, LocalDate end);
+
+    @Query("SELECT i FROM Invoice i ORDER BY i.dateFacture DESC")
+    List<Invoice> findAllOrderByDateDesc();
 }
