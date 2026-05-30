@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? _error;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -28,124 +28,101 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      final success = await context.read<AuthService>().login(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      final auth = context.read<AuthService>();
+      final success = await auth.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      if (success) {
-        Navigator.pushReplacementNamed(context, '/patient');
-      } else {
-        setState(() => _error = 'Email ou mot de passe incorrect');
+      if (mounted) {
+        if (success) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        } else {
+          ErrorHandler.showMessage(context, 'Email ou mot de passe incorrect', isError: true);
+        }
       }
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ErrorHandler.showError(context, e);
+      if (mounted) ErrorHandler.showError(context, e);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connexion'),
-        centerTitle: true,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                const Icon(
-                  Icons.local_hospital,
-                  size: 80,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: 16),
+                const Icon(Icons.local_hospital, size: 72, color: AppColors.primary),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   'MediSync',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                ),
-                const SizedBox(height: 48),
-                if (_error != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _error!,
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
                   ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Connectez-vous a votre compte',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                ),
+                const SizedBox(height: 40),
                 TextFormField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre email';
-                    }
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Entrez votre email';
+                    if (!v.contains('@')) return 'Email invalide';
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Mot de passe',
-                    prefixIcon: Icon(Icons.lock_outlined),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe';
-                    }
-                    return null;
-                  },
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _login(),
+                  validator: (v) => v == null || v.isEmpty ? 'Entrez votre mot de passe' : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+                          height: 20, width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Se connecter'),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 TextButton(
-                  onPressed: () {
-                    // Navigate to register
-                  },
-                  child: const Text('Pas encore de compte ? S\'inscrire'),
+                  onPressed: () => Navigator.pushNamed(context, '/register'),
+                  child: const Text('Pas de compte ? Creer un compte'),
                 ),
               ],
             ),

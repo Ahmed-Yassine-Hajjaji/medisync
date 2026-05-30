@@ -7,7 +7,7 @@ class AppColors {
   /// Couleur principale de l'application.
   static const Color primary = Color(0xFF1E6FD9);
   static const Color primaryDark = Color(0xFF1557AB);
-  static const Color background = Color(0xFFF5F7FB);
+  static const Color background = Color(0xFFFAFBFD);
   static const Color success = Color(0xFF22A06B);
   static const Color warning = Color(0xFFE8A013);
   static const Color danger = Color(0xFFD93636);

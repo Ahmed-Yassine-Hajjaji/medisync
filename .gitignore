@@ -59,6 +59,11 @@ logs/
 # Uploads
 uploads/
 
+# Build artifacts
+*.apk
+*.aab
+frontend/android/
+
 # OS
 Thumbs.db
 .DS_Store

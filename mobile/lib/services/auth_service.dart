@@ -5,6 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class AuthService extends ChangeNotifier {
+  // Changer cette URL selon votre environnement :
+  // - Emulateur Android : http://10.0.2.2:8080/api
+  // - Appareil physique : http://<IP_LOCAL>:8080/api
+  // - Production : https://votre-domaine.com/api
   static const String baseUrl = 'http://10.0.2.2:8080/api';
   User? _user;
   bool _isLoading = true;
@@ -32,7 +36,7 @@ class AuthService extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
@@ -63,7 +67,7 @@ class AuthService extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/register'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
         body: jsonEncode({
           'email': email,
           'password': password,
@@ -99,6 +103,7 @@ class AuthService extends ChangeNotifier {
 
   Map<String, String> get authHeaders => {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
     if (token != null) 'Authorization': 'Bearer $token',
   };
 }
