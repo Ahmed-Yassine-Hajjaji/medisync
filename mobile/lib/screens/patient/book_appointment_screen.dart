@@ -44,8 +44,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     {'value': 'CONSULTATION_GENERALE', 'label': 'Consultation générale'},
     {'value': 'SUIVI', 'label': 'Suivi'},
     {'value': 'URGENCE', 'label': 'Urgence'},
-    {'value': 'CONTROLE', 'label': 'Contrôle'},
     {'value': 'VACCINATION', 'label': 'Vaccination'},
+    {'value': 'CERTIFICAT_MEDICAL', 'label': 'Certificat médical'},
+    {'value': 'RENOUVELLEMENT_ORDONNANCE', 'label': 'Renouvellement ordonnance'},
     {'value': 'AUTRE', 'label': 'Autre'},
   ];
 

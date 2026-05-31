@@ -68,4 +68,12 @@ export class MedecinService {
   addDisponibilite(dispo: Disponibilite): Observable<Disponibilite> {
     return this.http.post<Disponibilite>(`${this.medecinUrl}/disponibilites`, dispo);
   }
+
+  deleteDisponibilite(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.medecinUrl}/disponibilites/${id}`);
+  }
+
+  searchPatients(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.medecinUrl}/patients/search`, { params: { q: query } });
+  }
 }

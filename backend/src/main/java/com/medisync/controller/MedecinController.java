@@ -72,6 +72,14 @@ public class MedecinController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/appointments/{id}/reschedule")
+    public ResponseEntity<AppointmentDTO> rescheduleAppointment(
+            @PathVariable Long id,
+            @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(
+                appointmentService.rescheduleAppointment(id, request.getNewDate(), request.getNewTimeSlot()));
+    }
+
     @GetMapping("/disponibilites")
     public ResponseEntity<List<DisponibiliteDTO>> getDisponibilites(@AuthenticationPrincipal UserDetailsImpl user) {
         return ResponseEntity.ok(medecinService.getDisponibilites(user.getId()));

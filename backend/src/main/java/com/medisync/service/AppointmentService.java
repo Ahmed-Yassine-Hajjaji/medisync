@@ -76,14 +76,20 @@ public class AppointmentService {
         appointment.setMedecin(medecin);
         appointment.setDate(request.getDate());
         appointment.setHeureDebut(request.getHeureDebut());
-        appointment.setHeureFin(request.getHeureDebut().plusMinutes(medecin.getDureeConsultation()));
+        Integer dureeObj = medecin.getDureeConsultation();
+        int duree = (dureeObj != null) ? dureeObj : 30;
+        appointment.setHeureFin(request.getHeureDebut().plusMinutes(duree));
         appointment.setMotif(request.getMotif());
         appointment.setNotes(request.getNotes());
         appointment.setStatut(StatutAppointment.EN_ATTENTE);
 
         appointment = appointmentRepository.save(appointment);
 
-        emailService.sendAppointmentConfirmation(appointment);
+        try {
+            emailService.sendAppointmentConfirmation(appointment);
+        } catch (Exception e) {
+            // Don't fail the appointment creation if email fails
+        }
 
         return toDTO(appointment);
     }
@@ -123,14 +129,19 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rendez-vous non trouve"));
 
-        int duree = appointment.getMedecin().getDureeConsultation();
+        Integer dureeObj = appointment.getMedecin().getDureeConsultation();
+        int duree = (dureeObj != null) ? dureeObj : 30;
         appointment.setDate(newDate);
         appointment.setHeureDebut(newTimeSlot);
         appointment.setHeureFin(newTimeSlot.plusMinutes(duree));
         appointment.setStatut(StatutAppointment.EN_ATTENTE);
 
         appointment = appointmentRepository.save(appointment);
-        emailService.sendAppointmentConfirmation(appointment);
+        try {
+            emailService.sendAppointmentConfirmation(appointment);
+        } catch (Exception e) {
+            // Don't fail the reschedule if email fails
+        }
 
         return toDTO(appointment);
     }

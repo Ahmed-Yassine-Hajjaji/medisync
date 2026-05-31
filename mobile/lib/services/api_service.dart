@@ -55,20 +55,35 @@ class ApiService {
     required String heureDebut,
     required String motif,
   }) async {
+    // Ensure heureDebut has seconds (HH:mm:ss format for LocalTime)
+    String formattedTime = heureDebut;
+    if (heureDebut.length == 5) {
+      formattedTime = '$heureDebut:00';
+    }
     final response = await http.post(
       Uri.parse('$baseUrl/patient/appointments'),
       headers: authService.authHeaders,
       body: jsonEncode({
         'medecinId': medecinId,
         'date': date,
-        'heureDebut': heureDebut,
+        'heureDebut': formattedTime,
         'motif': motif,
       }),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
       return Appointment.fromJson(jsonDecode(response.body));
     }
-    throw Exception('Erreur creation rendez-vous');
+    // Extract backend error message
+    String errorMsg = 'Erreur creation rendez-vous';
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map) {
+        errorMsg = body['message'] ?? body['error'] ?? 'Erreur ${response.statusCode}';
+      }
+    } catch (_) {
+      errorMsg = 'Erreur ${response.statusCode}';
+    }
+    throw Exception(errorMsg);
   }
 
   Future<void> cancelPatientAppointment(int id) async {
