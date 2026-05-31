@@ -105,6 +105,15 @@ public class MedecinService {
         return toDisponibiliteDTO(dispo);
     }
 
+    public void deleteDisponibilite(Long medecinId, Long dispoId) {
+        Disponibilite dispo = disponibiliteRepository.findById(dispoId)
+                .orElseThrow(() -> new RuntimeException("Disponibilite non trouvee"));
+        if (!dispo.getMedecin().getId().equals(medecinId)) {
+            throw new RuntimeException("Non autorise");
+        }
+        disponibiliteRepository.delete(dispo);
+    }
+
     public List<CreneauDTO> getCreneauxDisponibles(Long medecinId, LocalDate date) {
         Medecin medecin = medecinRepository.findById(medecinId)
                 .orElseThrow(() -> new RuntimeException("Medecin non trouve"));

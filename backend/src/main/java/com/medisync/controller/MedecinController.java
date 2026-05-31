@@ -84,6 +84,14 @@ public class MedecinController {
         return ResponseEntity.ok(medecinService.addDisponibilite(user.getId(), dto));
     }
 
+    @DeleteMapping("/disponibilites/{id}")
+    public ResponseEntity<Void> deleteDisponibilite(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable Long id) {
+        medecinService.deleteDisponibilite(user.getId(), id);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/consultations/{appointmentId}")
     public ResponseEntity<ConsultationDTO> createConsultation(
             @PathVariable Long appointmentId,

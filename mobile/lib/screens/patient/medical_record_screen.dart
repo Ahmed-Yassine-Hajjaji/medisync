@@ -99,7 +99,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen>
           controller: _tabController,
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: AppColors.primary.withOpacity(0.5),
           tabs: const [
             Tab(text: 'Consultations'),
             Tab(text: 'Ordonnances'),

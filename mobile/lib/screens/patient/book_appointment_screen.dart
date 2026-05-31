@@ -269,7 +269,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                                 Text(m.specialite),
                                 if (m.tarifConsultation != null)
                                   Text(
-                                    '${m.tarifConsultation!.toStringAsFixed(0)} DA',
+                                    '${m.tarifConsultation!.toStringAsFixed(0)} DH',
                                     style: TextStyle(
                                       color: AppColors.success,
                                       fontSize: 12,

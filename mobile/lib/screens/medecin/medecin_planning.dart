@@ -361,32 +361,82 @@ class _MedecinPlanningState extends State<MedecinPlanning> {
     );
   }
 
+  Future<void> _deleteDisponibilite(Disponibilite dispo) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer la disponibilite ?'),
+        content: Text('Supprimer le creneau du ${_dayLabel(dispo.jourSemaine)} ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || dispo.id == null) return;
+    try {
+      await _apiService.deleteDisponibilite(dispo.id!);
+      if (mounted) {
+        ErrorHandler.showMessage(context, 'Disponibilite supprimee');
+        _loadDisponibilites();
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showError(context, e);
+    }
+  }
+
   Widget _buildDisponibiliteTile(Disponibilite dispo) {
     final isConge = dispo.conge ?? false;
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-              (isConge ? AppColors.warning : AppColors.success).withOpacity(0.15),
-          child: Icon(
-            isConge ? Icons.beach_access : Icons.schedule,
-            color: isConge ? AppColors.warning : AppColors.success,
-            size: 20,
+    return Dismissible(
+      key: ValueKey(dispo.id ?? dispo.jourSemaine + dispo.heureDebut),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.danger,
+          borderRadius: BorderRadius.circular(AppSpacing.radius),
+        ),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        await _deleteDisponibilite(dispo);
+        return false;
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor:
+                (isConge ? AppColors.warning : AppColors.success).withOpacity(0.15),
+            child: Icon(
+              isConge ? Icons.beach_access : Icons.schedule,
+              color: isConge ? AppColors.warning : AppColors.success,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            _dayLabel(dispo.jourSemaine),
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: isConge
+              ? const Text('Conge / Indisponible',
+                  style: TextStyle(color: AppColors.warning))
+              : Text(
+                  '${dispo.heureDebut.length >= 5 ? dispo.heureDebut.substring(0, 5) : dispo.heureDebut}'
+                  ' - '
+                  '${dispo.heureFin.length >= 5 ? dispo.heureFin.substring(0, 5) : dispo.heureFin}',
+                ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),
+            onPressed: () => _deleteDisponibilite(dispo),
+            tooltip: 'Supprimer',
           ),
         ),
-        title: Text(
-          _dayLabel(dispo.jourSemaine),
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: isConge
-            ? const Text('Conge / Indisponible',
-                style: TextStyle(color: AppColors.warning))
-            : Text(
-                '${dispo.heureDebut.length >= 5 ? dispo.heureDebut.substring(0, 5) : dispo.heureDebut}'
-                ' - '
-                '${dispo.heureFin.length >= 5 ? dispo.heureFin.substring(0, 5) : dispo.heureFin}',
-              ),
       ),
     );
   }

@@ -204,7 +204,7 @@ class _MedecinProfileState extends State<MedecinProfile> {
                           Expanded(
                             child: _buildField(
                               controller: _tarifCtrl,
-                              label: 'Tarif (DA)',
+                              label: 'Tarif (DH)',
                               icon: Icons.payments_outlined,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
@@ -328,7 +328,7 @@ class _MedecinProfileState extends State<MedecinProfile> {
                             color: AppColors.success),
                         const SizedBox(width: 3),
                         Text(
-                          '${_tarifCtrl.text} DA',
+                          '${_tarifCtrl.text} DH',
                           style: const TextStyle(
                               fontSize: 12, color: AppColors.success),
                         ),

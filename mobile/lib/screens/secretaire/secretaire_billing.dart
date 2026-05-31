@@ -20,7 +20,7 @@ class _SecretaireBillingState extends State<SecretaireBilling> {
   bool _isLoading = true;
 
   final _currencyFmt = NumberFormat.currency(
-      locale: 'fr_FR', symbol: 'DZD', decimalDigits: 2);
+      locale: 'fr_FR', symbol: 'DH', decimalDigits: 2);
 
   @override
   void initState() {
@@ -523,7 +523,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 hintText: '0.00',
-                suffixText: 'DZD',
+                suffixText: 'DH',
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 border: OutlineInputBorder(

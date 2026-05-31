@@ -295,6 +295,16 @@ class ApiService {
     }
   }
 
+  Future<void> deleteDisponibilite(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/medecin/disponibilites/$id'),
+      headers: authService.authHeaders,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Erreur suppression disponibilite');
+    }
+  }
+
   // ─── SECRETAIRE ───
   Future<List<Appointment>> getSecretaireAppointmentsByDate(String date) async {
     final response = await http.get(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -20,8 +21,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   @override
   void dispose() {
@@ -32,6 +36,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _registerWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        if (mounted) setState(() => _isGoogleLoading = false);
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        if (mounted) {
+          ErrorHandler.showMessage(context, 'Erreur Google Sign-In', isError: true);
+          setState(() => _isGoogleLoading = false);
+        }
+        return;
+      }
+      final auth = context.read<AuthService>();
+      final success = await auth.loginWithGoogle(idToken);
+      if (mounted) {
+        if (success) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        } else {
+          ErrorHandler.showMessage(context, 'Echec inscription Google', isError: true);
+        }
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showError(context, e);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
   }
 
   Future<void> _register() async {
@@ -127,7 +164,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: _obscurePassword,
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Requis';
-                  if (v.length < 6) return 'Minimum 6 caracteres';
+                  if (v.length < 8) return 'Minimum 8 caracteres';
+                  if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Au moins une majuscule';
+                  if (!RegExp(r'[a-z]').hasMatch(v)) return 'Au moins une minuscule';
+                  if (!RegExp(r'[0-9]').hasMatch(v)) return 'Au moins un chiffre';
+                  if (!RegExp(r'[@$!%*?&]').hasMatch(v)) return 'Au moins un caractere special (@\$!%*?&)';
                   return null;
                 },
               ),
@@ -154,6 +195,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: _isLoading
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Text('S\'inscrire'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Text('ou', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: _isGoogleLoading ? null : _registerWithGoogle,
+                icon: _isGoogleLoading
+                    ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.g_mobiledata, size: 24),
+                label: const Text('S\'inscrire avec Google'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radius),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               TextButton(

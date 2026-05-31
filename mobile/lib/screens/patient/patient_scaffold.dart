@@ -43,7 +43,7 @@ class _PatientScaffoldState extends State<PatientScaffold> {
     NavigationDestination(
       icon: Icon(Icons.medication_outlined),
       selectedIcon: Icon(Icons.medication),
-      label: 'Ordonnances',
+      label: 'Ordonn.',
     ),
     NavigationDestination(
       icon: Icon(Icons.person_outline),

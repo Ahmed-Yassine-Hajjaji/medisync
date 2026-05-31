@@ -481,7 +481,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   ),
                   if (medecin.tarifConsultation != null)
                     Text(
-                      '${medecin.tarifConsultation!.toStringAsFixed(0)} DA',
+                      '${medecin.tarifConsultation!.toStringAsFixed(0)} DH',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.success,

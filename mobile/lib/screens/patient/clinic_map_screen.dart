@@ -27,15 +27,14 @@ class _ClinicMapScreenState extends State<ClinicMapScreen> {
   LatLng? _currentPosition;
   bool _isLoading = true;
 
-  // Default clinic location (Paris) - replace with actual clinic coordinates
   late LatLng _clinicPosition;
 
   @override
   void initState() {
     super.initState();
     _clinicPosition = LatLng(
-      widget.clinicLat ?? 48.8566,
-      widget.clinicLng ?? 2.3522,
+      widget.clinicLat ?? 34.0209,
+      widget.clinicLng ?? -6.8416,
     );
     _getCurrentLocation();
   }
@@ -87,7 +86,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.clinicName ?? 'Localisation clinique'),
+        title: Text(widget.clinicName ?? 'Clinique Moulay Youssef - Rabat'),
         actions: [
           IconButton(
             icon: const Icon(Icons.directions),
@@ -131,7 +130,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen> {
                             ],
                           ),
                           child: Text(
-                            widget.clinicName ?? 'Clinique',
+                            widget.clinicName ?? 'Clinique Moulay Youssef',
                             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -201,7 +200,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      widget.clinicName ?? 'Clinique MediSync',
+                      widget.clinicName ?? 'Clinique Moulay Youssef',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),

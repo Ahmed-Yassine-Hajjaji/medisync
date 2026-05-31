@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
@@ -111,7 +114,16 @@ class _FinancialReportsState extends State<FinancialReports> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Rapports financiers')),
+      appBar: AppBar(
+        title: const Text('Rapports financiers'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Telecharger le rapport PDF',
+            onPressed: _loading ? null : _downloadReportPdf,
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primary,
@@ -225,6 +237,74 @@ class _FinancialReportsState extends State<FinancialReports> {
           icon: Icons.cancel_outlined,
           color: AppColors.danger,
         ),
+      ],
+    );
+  }
+
+  Future<void> _downloadReportPdf() async {
+    final pdf = pw.Document();
+    final invoices = _filteredInvoices;
+    final fmt = DateFormat('dd/MM/yyyy');
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => [
+          pw.Header(
+            level: 0,
+            child: pw.Text('Rapport Financier - MediSync',
+                style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text('Periode : ${fmt.format(_startDate)} - ${fmt.format(_endDate)}'),
+          pw.SizedBox(height: 16),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              _pdfKpi("Chiffre d'affaires", '${_totalCA.toStringAsFixed(2)} DH'),
+              _pdfKpi('Encaisse', '${_totalPaye.toStringAsFixed(2)} DH'),
+              _pdfKpi('En attente', '${_totalAttente.toStringAsFixed(2)} DH'),
+              _pdfKpi('Impaye', '${_totalImpaye.toStringAsFixed(2)} DH'),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pw.Text('Liste des factures',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+          pw.TableHelper.fromTextArray(
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+            cellStyle: const pw.TextStyle(fontSize: 9),
+            headers: ['N° Facture', 'Patient', 'Date', 'Montant', 'Paye', 'Statut'],
+            data: invoices
+                .map((i) => [
+                      i.numeroFacture ?? '-',
+                      i.patientFullName.isNotEmpty ? i.patientFullName : '-',
+                      i.dateFacture != null
+                          ? fmt.format(DateTime.parse(i.dateFacture!))
+                          : '-',
+                      '${i.montantTotal.toStringAsFixed(2)} DH',
+                      '${i.montantPaye.toStringAsFixed(2)} DH',
+                      i.statut,
+                    ])
+                .toList(),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'rapport_financier_${DateFormat('yyyyMMdd').format(_startDate)}_${DateFormat('yyyyMMdd').format(_endDate)}.pdf',
+    );
+  }
+
+  static pw.Widget _pdfKpi(String label, String value) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(label, style: const pw.TextStyle(fontSize: 9)),
+        pw.Text(value,
+            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
       ],
     );
   }
@@ -356,6 +436,85 @@ class _InvoiceCard extends StatelessWidget {
 
   const _InvoiceCard({required this.invoice});
 
+  Future<void> _downloadInvoicePdf(BuildContext context) async {
+    final pdf = pw.Document();
+    final fmt = DateFormat('dd/MM/yyyy');
+    final dateStr = invoice.dateFacture != null
+        ? fmt.format(DateTime.parse(invoice.dateFacture!))
+        : '-';
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (ctx) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Header(
+              level: 0,
+              child: pw.Text('FACTURE',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.Text('Clinique Moulay Youssef - Rabat',
+                style: const pw.TextStyle(fontSize: 12)),
+            pw.SizedBox(height: 20),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('N° Facture : ${invoice.numeroFacture ?? 'N/A'}'),
+                    pw.Text('Date : $dateStr'),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Patient : ${invoice.patientFullName.isNotEmpty ? invoice.patientFullName : 'Inconnu'}'),
+                  ],
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 30),
+            pw.TableHelper.fromTextArray(
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              headers: ['Description', 'Montant'],
+              data: [
+                ['Consultation medicale', '${invoice.montantTotal.toStringAsFixed(2)} DH'],
+              ],
+            ),
+            pw.SizedBox(height: 20),
+            pw.Divider(),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Total : ${invoice.montantTotal.toStringAsFixed(2)} DH',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                    pw.Text('Paye : ${invoice.montantPaye.toStringAsFixed(2)} DH'),
+                    if (invoice.resteAPayer > 0)
+                      pw.Text('Reste a payer : ${invoice.resteAPayer.toStringAsFixed(2)} DH',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.red)),
+                  ],
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 40),
+            pw.Text('Mode de paiement : ${invoice.modePaiement ?? 'Non specifie'}'),
+            pw.Text('Statut : ${invoice.statut}'),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'facture_${invoice.numeroFacture ?? invoice.id}.pdf',
+    );
+  }
+
   Color get _statusColor {
     switch (invoice.statut) {
       case 'PAYE':
@@ -471,6 +630,19 @@ class _InvoiceCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => _downloadInvoicePdf(context),
+                      icon: const Icon(Icons.download, size: 16),
+                      label: const Text('Telecharger PDF', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      ),
+                    ),
                   ),
                 ],
               ),

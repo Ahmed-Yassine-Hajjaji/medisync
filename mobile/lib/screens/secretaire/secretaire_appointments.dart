@@ -19,7 +19,9 @@ class _SecretaireAppointmentsState extends State<SecretaireAppointments> {
   List<Appointment> _appointments = [];
   bool _isLoading = true;
 
-  DateTime? _filterDate;
+  DateTime _filterDateFrom = DateTime.now();
+  DateTime _filterDateTo = DateTime.now();
+  bool _rangeMode = false;
   String? _filterStatut;
 
   static const _statuts = ['Tous', 'EN_ATTENTE', 'CONFIRME', 'ANNULE', 'TERMINE'];
@@ -35,17 +37,21 @@ class _SecretaireAppointmentsState extends State<SecretaireAppointments> {
   void initState() {
     super.initState();
     _apiService = ApiService(context.read<AuthService>());
-    _filterDate = DateTime.now();
     _loadAppointments();
   }
 
   Future<void> _loadAppointments() async {
     if (mounted) setState(() => _isLoading = true);
     try {
-      final dateStr = _filterDate != null
-          ? DateFormat('yyyy-MM-dd').format(_filterDate!)
-          : DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final apts = await _apiService.getSecretaireAppointmentsByDate(dateStr);
+      List<Appointment> apts;
+      if (_rangeMode) {
+        final from = DateFormat('yyyy-MM-dd').format(_filterDateFrom);
+        final to = DateFormat('yyyy-MM-dd').format(_filterDateTo);
+        apts = await _apiService.getSecretaireAppointmentsBetween(from, to);
+      } else {
+        final dateStr = DateFormat('yyyy-MM-dd').format(_filterDateFrom);
+        apts = await _apiService.getSecretaireAppointmentsByDate(dateStr);
+      }
       if (mounted) {
         setState(() {
           _appointments = apts;
@@ -69,16 +75,25 @@ class _SecretaireAppointmentsState extends State<SecretaireAppointments> {
     }).toList();
   }
 
-  Future<void> _pickDate() async {
+  Future<void> _pickDate({required bool isFrom}) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _filterDate ?? DateTime.now(),
+      initialDate: isFrom ? _filterDateFrom : _filterDateTo,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       locale: const Locale('fr', 'FR'),
     );
     if (picked != null && mounted) {
-      setState(() => _filterDate = picked);
+      setState(() {
+        if (isFrom) {
+          _filterDateFrom = picked;
+          if (!_rangeMode) _filterDateTo = picked;
+          if (_filterDateTo.isBefore(_filterDateFrom)) _filterDateTo = _filterDateFrom;
+        } else {
+          _filterDateTo = picked;
+          if (_filterDateTo.isBefore(_filterDateFrom)) _filterDateFrom = _filterDateTo;
+        }
+      });
       _loadAppointments();
     }
   }
@@ -166,61 +181,116 @@ class _SecretaireAppointmentsState extends State<SecretaireAppointments> {
       color: Colors.white,
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: _pickDate,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(AppSpacing.radius),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: AppColors.primary),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      _filterDate != null
-                          ? DateFormat('dd/MM/yyyy').format(_filterDate!)
-                          : 'Choisir date',
-                      style: const TextStyle(fontSize: 13),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _pickDate(isFrom: true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(AppSpacing.radius),
+                      color: Colors.white,
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today,
+                            size: 14, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _rangeMode ? 'Du ${DateFormat('dd/MM').format(_filterDateFrom)}' : DateFormat('dd/MM/yyyy').format(_filterDateFrom),
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              value: _filterStatut ?? 'Tous',
-              decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radius),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+              if (_rangeMode) ...[
+                const SizedBox(width: 6),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _pickDate(isFrom: false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(AppSpacing.radius),
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today,
+                              size: 14, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Au ${DateFormat('dd/MM').format(_filterDateTo)}',
+                              style: const TextStyle(fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radius),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+              ],
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _rangeMode = !_rangeMode;
+                    if (!_rangeMode) _filterDateTo = _filterDateFrom;
+                  });
+                  _loadAppointments();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _rangeMode ? AppColors.primary.withOpacity(0.1) : Colors.white,
+                    border: Border.all(color: _rangeMode ? AppColors.primary : Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(AppSpacing.radius),
+                  ),
+                  child: Icon(Icons.date_range,
+                      size: 18, color: _rangeMode ? AppColors.primary : Colors.grey),
                 ),
-                filled: true,
-                fillColor: Colors.white,
               ),
-              items: _statuts
-                  .map((s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(_statutLabels[s] ?? s,
-                            style: const TextStyle(fontSize: 13)),
-                      ))
-                  .toList(),
-              onChanged: (val) => setState(() => _filterStatut = val),
-            ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _filterStatut ?? 'Tous',
+                  decoration: InputDecoration(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radius),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radius),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  items: _statuts
+                      .map((s) => DropdownMenuItem(
+                            value: s,
+                            child: Text(_statutLabels[s] ?? s,
+                                style: const TextStyle(fontSize: 12)),
+                          ))
+                      .toList(),
+                  onChanged: (val) => setState(() => _filterStatut = val),
+                ),
+              ),
+            ],
           ),
         ],
       ),

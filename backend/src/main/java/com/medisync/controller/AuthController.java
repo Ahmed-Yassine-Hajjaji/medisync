@@ -28,4 +28,9 @@ public class AuthController {
     public ResponseEntity<String> generateTotpSecret() {
         return ResponseEntity.ok(authService.generateTotpSecret());
     }
+
+    @GetMapping("/google/mobile")
+    public ResponseEntity<AuthResponse> googleMobileAuth(@RequestParam String token) {
+        return ResponseEntity.ok(authService.authenticateWithGoogle(token));
+    }
 }

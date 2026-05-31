@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -16,7 +17,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   @override
   void dispose() {
@@ -47,6 +51,43 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) ErrorHandler.showError(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        if (mounted) setState(() => _isGoogleLoading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        if (mounted) {
+          ErrorHandler.showMessage(context, 'Erreur Google Sign-In', isError: true);
+          setState(() => _isGoogleLoading = false);
+        }
+        return;
+      }
+
+      final auth = context.read<AuthService>();
+      final success = await auth.loginWithGoogle(idToken);
+
+      if (mounted) {
+        if (success) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        } else {
+          ErrorHandler.showMessage(context, 'Echec de la connexion Google', isError: true);
+        }
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showError(context, e);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -118,6 +159,41 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Se connecter'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: Text('ou', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: _isGoogleLoading ? null : _loginWithGoogle,
+                  icon: _isGoogleLoading
+                      ? const SizedBox(
+                          height: 18, width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Image.network(
+                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                          height: 20,
+                          width: 20,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
+                        ),
+                  label: const Text('Continuer avec Google'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black87,
+                    side: BorderSide(color: Colors.grey.shade300),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radius),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextButton(

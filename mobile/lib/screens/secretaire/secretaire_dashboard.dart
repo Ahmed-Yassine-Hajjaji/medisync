@@ -215,7 +215,7 @@ class _SecretaireDashboardState extends State<SecretaireDashboard> {
       ),
       _KpiData(
         label: 'Factures impayees',
-        value: NumberFormat.currency(locale: 'fr_FR', symbol: 'DZD', decimalDigits: 0).format(_impayeAmount),
+        value: NumberFormat.currency(locale: 'fr_FR', symbol: 'DH', decimalDigits: 0).format(_impayeAmount),
         icon: Icons.receipt_long,
         color: AppColors.danger,
       ),

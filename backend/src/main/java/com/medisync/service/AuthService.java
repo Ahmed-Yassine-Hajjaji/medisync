@@ -16,8 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    @Value("${GOOGLE_CLIENT_ID:}")
+    private String googleClientId;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -105,6 +113,54 @@ public class AuthService {
     public boolean verifyTotpCode(String secret, String code) {
         CodeVerifier verifier = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
         return verifier.isValidCode(secret, code);
+    }
+
+    @Transactional
+    public AuthResponse authenticateWithGoogle(String idTokenString) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new RuntimeException("Token Google invalide");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String prenom = (String) payload.get("given_name");
+            String nom = (String) payload.get("family_name");
+
+            User user = userRepository.findByEmail(email).orElseGet(() -> {
+                Patient patient = new Patient();
+                patient.setEmail(email);
+                patient.setPrenom(prenom != null ? prenom : "");
+                patient.setNom(nom != null ? nom : "");
+                patient.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+                patient.setRole(Role.PATIENT);
+                patient.setEnabled(true);
+                return patientRepository.save(patient);
+            });
+
+            UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().name());
+            claims.put("id", user.getId());
+            String token = jwtService.generateToken(userDetails, claims);
+
+            return AuthResponse.builder()
+                    .token(token)
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .nom(user.getNom())
+                    .prenom(user.getPrenom())
+                    .role(user.getRole())
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Echec authentification Google: " + e.getMessage());
+        }
     }
 
     @Transactional
