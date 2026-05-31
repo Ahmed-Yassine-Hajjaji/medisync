@@ -102,8 +102,14 @@ public class AppointmentService {
         appointment.setStatut(statut);
         appointment = appointmentRepository.save(appointment);
 
-        if (statut == StatutAppointment.ANNULE) {
-            emailService.sendAppointmentCancellation(appointment);
+        try {
+            if (statut == StatutAppointment.ANNULE) {
+                emailService.sendAppointmentCancellation(appointment);
+            } else if (statut == StatutAppointment.CONFIRME) {
+                emailService.sendAppointmentStatusUpdate(appointment, "confirmé");
+            }
+        } catch (Exception e) {
+            // Don't fail status update if email fails
         }
 
         return toDTO(appointment);

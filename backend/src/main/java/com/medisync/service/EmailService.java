@@ -64,6 +64,32 @@ public class EmailService {
     }
 
     @Async
+    public void sendAppointmentStatusUpdate(Appointment appointment, String newStatus) {
+        String subject = "Votre rendez-vous a été " + newStatus + " - MediSync";
+        String html = String.format(
+            "<h2>Bonjour %s %s,</h2>" +
+            "<p>Votre rendez-vous a ete <strong>%s</strong>.</p>" +
+            "<h3>Details:</h3>" +
+            "<ul>" +
+            "<li><strong>Date:</strong> %s</li>" +
+            "<li><strong>Heure:</strong> %s</li>" +
+            "<li><strong>Medecin:</strong> Dr. %s %s</li>" +
+            "<li><strong>Motif:</strong> %s</li>" +
+            "</ul>" +
+            "<p>Cordialement,<br>L'equipe MediSync</p>",
+            appointment.getPatient().getPrenom(),
+            appointment.getPatient().getNom(),
+            newStatus,
+            appointment.getDate(),
+            appointment.getHeureDebut(),
+            appointment.getMedecin().getPrenom(),
+            appointment.getMedecin().getNom(),
+            appointment.getMotif()
+        );
+        sendEmail(appointment.getPatient().getEmail(), subject, html);
+    }
+
+    @Async
     public void sendAppointmentReminder(Appointment appointment, String timing) {
         String subject = "Rappel: Rendez-vous " + timing + " - MediSync";
         String html = String.format(
