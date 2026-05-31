@@ -482,7 +482,7 @@ class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
   Medecin? _selectedMedecin;
   Creneau? _selectedCreneau;
   DateTime _selectedDate = DateTime.now();
-  String _selectedMotif = 'Consultation generale';
+  String _selectedMotif = 'CONSULTATION_GENERALE';
 
   List<User> _patientSuggestions = [];
   List<Medecin> _medecins = [];
@@ -495,13 +495,24 @@ class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
   bool _showSuggestions = false;
 
   static const _motifs = [
-    'Consultation generale',
-    'Suivi',
-    'Urgence',
-    'Bilan',
-    'Renouvellement ordonnance',
-    'Autre',
+    'CONSULTATION_GENERALE',
+    'SUIVI',
+    'URGENCE',
+    'VACCINATION',
+    'CERTIFICAT_MEDICAL',
+    'RENOUVELLEMENT_ORDONNANCE',
+    'AUTRE',
   ];
+
+  static const _motifLabels = {
+    'CONSULTATION_GENERALE': 'Consultation generale',
+    'SUIVI': 'Suivi',
+    'URGENCE': 'Urgence',
+    'VACCINATION': 'Vaccination',
+    'CERTIFICAT_MEDICAL': 'Certificat medical',
+    'RENOUVELLEMENT_ORDONNANCE': 'Renouvellement ordonnance',
+    'AUTRE': 'Autre',
+  };
 
   @override
   void initState() {
@@ -606,11 +617,13 @@ class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
 
     setState(() => _submitting = true);
     try {
+      String heureDebut = _selectedCreneau!.heureDebut;
+      if (heureDebut.length == 5) heureDebut = '$heureDebut:00';
       await widget.apiService.createSecretaireAppointment({
         'patientId': _selectedPatient!.id,
         'medecinId': _selectedMedecin!.id,
         'date': DateFormat('yyyy-MM-dd').format(_selectedDate),
-        'heureDebut': _selectedCreneau!.heureDebut,
+        'heureDebut': heureDebut,
         'motif': _selectedMotif,
       });
       if (mounted) {
@@ -904,7 +917,7 @@ class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
               items: _motifs
                   .map((m) => DropdownMenuItem(
                         value: m,
-                        child: Text(m, style: const TextStyle(fontSize: 13)),
+                        child: Text(_motifLabels[m] ?? m, style: const TextStyle(fontSize: 13)),
                       ))
                   .toList(),
               onChanged: (v) => setState(() => _selectedMotif = v ?? _motifs.first),

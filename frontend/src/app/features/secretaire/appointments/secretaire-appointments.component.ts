@@ -43,8 +43,12 @@ interface Option<T> { label: string; value: T; }
 
     <div class="filters-card">
       <div class="filter-item">
-        <label>Date</label>
-        <input type="date" [(ngModel)]="filterDate" (change)="load()">
+        <label>Du</label>
+        <input type="date" [(ngModel)]="filterDateFrom" (change)="load()">
+      </div>
+      <div class="filter-item">
+        <label>Au</label>
+        <input type="date" [(ngModel)]="filterDateTo" (change)="load()">
       </div>
       <div class="filter-item">
         <label>Médecin</label>
@@ -65,6 +69,7 @@ interface Option<T> { label: string; value: T; }
                styleClass="minimal-table" responsiveLayout="scroll">
         <ng-template pTemplate="header">
           <tr>
+            <th>Date</th>
             <th>Heure</th>
             <th>Patient</th>
             <th>Médecin</th>
@@ -75,6 +80,7 @@ interface Option<T> { label: string; value: T; }
         </ng-template>
         <ng-template pTemplate="body" let-row>
           <tr>
+            <td>{{ row.date }}</td>
             <td><strong>{{ row.heureDebut }}</strong></td>
             <td>{{ row.patientPrenom }} {{ row.patientNom }}</td>
             <td>Dr. {{ row.medecinPrenom }} {{ row.medecinNom }}<br><small class="text-muted">{{ row.medecinSpecialite }}</small></td>
@@ -99,7 +105,7 @@ interface Option<T> { label: string; value: T; }
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
-          <tr><td colspan="6" class="empty-cell">Aucun rendez-vous</td></tr>
+          <tr><td colspan="7" class="empty-cell">Aucun rendez-vous</td></tr>
         </ng-template>
       </p-table>
     </div>
@@ -176,7 +182,7 @@ interface Option<T> { label: string; value: T; }
 
     .filters-card {
       background: white; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 1rem 1.25rem; display: grid; grid-template-columns: 200px 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+      padding: 1rem 1.25rem; display: grid; grid-template-columns: 180px 180px 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
     }
     .filter-item label { display: block; font-size: 0.75rem; font-weight: 600;
       color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.375rem; }
@@ -231,7 +237,8 @@ export class SecretaireAppointmentsComponent implements OnInit {
   all: Appointment[] = [];
   filtered: Appointment[] = [];
 
-  filterDate = this.todayIso();
+  filterDateFrom = this.todayIso();
+  filterDateTo = this.todayIso();
   filterMedecinId: number | null = null;
   filterStatut: StatutAppointment | null = null;
 
@@ -287,7 +294,10 @@ export class SecretaireAppointmentsComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.appointmentService.getAllAppointmentsByDate(this.filterDate).subscribe({
+    const obs = this.filterDateFrom === this.filterDateTo
+      ? this.appointmentService.getAllAppointmentsByDate(this.filterDateFrom)
+      : this.appointmentService.getAllAppointmentsBetween(this.filterDateFrom, this.filterDateTo);
+    obs.subscribe({
       next: list => {
         this.all = list;
         this.applyFilters();
