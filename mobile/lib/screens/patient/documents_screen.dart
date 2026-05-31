@@ -35,13 +35,13 @@ class Document {
   factory Document.fromJson(Map<String, dynamic> json) {
     return Document(
       id: json['id'],
-      filename: json['filename'],
-      originalName: json['originalName'],
-      mimeType: json['mimeType'],
-      size: json['size'],
-      category: json['category'] ?? 'AUTRE',
-      uploadDate: json['uploadDate'],
-      url: json['url'],
+      filename: json['filename'] ?? json['nom'] ?? '',
+      originalName: json['originalName'] ?? json['nom'] ?? '',
+      mimeType: json['mimeType'] ?? json['typeMime'] ?? '',
+      size: json['size'] ?? json['tailleFichier'] ?? 0,
+      category: json['category'] ?? json['type'] ?? 'AUTRE',
+      uploadDate: json['uploadDate'] ?? json['dateUpload'] ?? '',
+      url: json['url'] ?? json['cheminFichier'],
     );
   }
 }

@@ -117,12 +117,17 @@ public class MedicalDocumentService {
         MedicalDocumentDTO dto = new MedicalDocumentDTO();
         dto.setId(doc.getId());
         dto.setNom(doc.getNom());
+        dto.setFilename(doc.getNom());
+        dto.setOriginalName(doc.getNom());
         dto.setType(doc.getType() != null ? doc.getType().name() : "AUTRE");
         dto.setCheminFichier(doc.getCheminFichier());
         dto.setTypeMime(doc.getTypeMime());
+        dto.setMimeType(doc.getTypeMime());
         dto.setTailleFichier(doc.getTailleFichier());
+        dto.setSize(doc.getTailleFichier());
         dto.setDescription(doc.getDescription());
         dto.setDateUpload(doc.getDateUpload());
+        dto.setUploadDate(doc.getDateUpload() != null ? doc.getDateUpload().toString() : null);
         dto.setCategory(doc.getType() != null ? doc.getType().name() : null);
         return dto;
     }

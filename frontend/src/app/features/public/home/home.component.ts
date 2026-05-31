@@ -1,6 +1,7 @@
 import { Component, signal, AfterViewInit, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-home',
@@ -53,15 +54,6 @@ import { RouterModule } from '@angular/router';
               <p>D&eacute;vou&eacute;e &agrave; fournir les meilleurs soins possibles</p>
             </div>
           </div>
-          <div class="hero-float-card">
-            <div class="float-card-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>
-            </div>
-            <div>
-              <p class="float-card-title">98% de satisfaction</p>
-              <p class="float-card-sub">Bas&eacute; sur 10 000+ avis patients</p>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -78,7 +70,7 @@ import { RouterModule } from '@angular/router';
           @for (service of services; track service.title; let i = $index) {
             <div class="service-card" [class.visible]="servicesVisible()" [style.animation-delay]="(i * 80) + 'ms'">
               <div class="service-icon" [style.color]="service.color" [style.background]="service.bgColor">
-                <div [innerHTML]="service.svg"></div>
+                <div [innerHTML]="trustHtml(service.svg)"></div>
               </div>
               <h3>{{ service.title }}</h3>
               <p>{{ service.description }}</p>
@@ -113,22 +105,6 @@ import { RouterModule } from '@angular/router';
                   Prendre RDV
                 </a>
               </div>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== STATS ==================== -->
-    <section class="stats" #statsRef>
-      <div class="container">
-        <div class="stats-grid">
-          @for (stat of stats; track stat.label; let i = $index) {
-            <div class="stat-card" [class.visible]="statsVisible()" [style.animation-delay]="(i * 100) + 'ms'">
-              <div class="stat-icon" [innerHTML]="stat.icon"></div>
-              <h3 class="stat-value">{{ stat.value }}</h3>
-              <p class="stat-label-text">{{ stat.label }}</p>
-              <p class="stat-desc">{{ stat.description }}</p>
             </div>
           }
         </div>
@@ -209,7 +185,7 @@ import { RouterModule } from '@angular/router';
           @for (city of cities; track city.name; let i = $index) {
             <a routerLink="/medecins" [queryParams]="{ville: city.name}" class="city-card" [class.visible]="citiesVisible()" [style.animation-delay]="(i * 80) + 'ms'">
               <span class="city-left">
-                <span class="city-emoji">{{ city.emoji }}</span>
+                <span class="city-icon" [innerHTML]="trustHtml(city.icon)"></span>
                 <span class="city-name">{{ city.name }}</span>
               </span>
               <span class="city-right">
@@ -395,8 +371,8 @@ import { RouterModule } from '@angular/router';
     /* ==================== HERO ==================== */
     .hero {
       position: relative;
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
-      color: #fff;
+      background: #f8fafc;
+      color: var(--text-dark);
       padding: 5rem 0 6rem;
       overflow: hidden;
     }
@@ -406,7 +382,7 @@ import { RouterModule } from '@angular/router';
       right: -10%;
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-grid {
@@ -427,15 +403,15 @@ import { RouterModule } from '@angular/router';
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
+      background: var(--primary-bg);
+      border: 1px solid var(--primary-bg-hover);
+      color: var(--primary);
       border-radius: 999px;
       padding: 7px 18px;
       font-size: 0.8125rem;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 1.75rem;
-      backdrop-filter: blur(8px);
-      svg { opacity: 0.9; }
+      svg { opacity: 0.9; color: var(--primary); }
     }
 
     .hero-text h1 {
@@ -443,11 +419,12 @@ import { RouterModule } from '@angular/router';
       font-weight: 800;
       line-height: 1.12;
       margin-bottom: 1.25rem;
-      .accent { color: #93c5fd; }
+      color: var(--text-dark);
+      .accent { color: var(--primary); }
     }
 
     .hero-subtitle {
-      color: rgba(255,255,255,0.85);
+      color: var(--text-muted);
       font-size: 1.0625rem;
       line-height: 1.75;
       margin-bottom: 2rem;
@@ -463,33 +440,33 @@ import { RouterModule } from '@angular/router';
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #fff;
-      color: var(--primary);
+      background: var(--primary);
+      color: #fff;
       font-weight: 700;
       border: none;
       border-radius: 12px;
       padding: 14px 28px;
       font-size: 0.9375rem;
       text-decoration: none;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 14px rgba(37,99,235,0.3);
       transition: all 0.25s ease;
       cursor: pointer;
-      &:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+      &:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.4); background: var(--primary-dark); }
     }
     .btn-cta-secondary {
       display: inline-flex;
       align-items: center;
       background: transparent;
-      color: #fff;
+      color: var(--text-dark);
       font-weight: 600;
-      border: 2px solid rgba(255,255,255,0.4);
+      border: 2px solid var(--border);
       border-radius: 12px;
       padding: 14px 28px;
       font-size: 0.9375rem;
       text-decoration: none;
       transition: all 0.25s ease;
       cursor: pointer;
-      &:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
+      &:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
     }
 
     .hero-badges {
@@ -503,8 +480,8 @@ import { RouterModule } from '@angular/router';
       align-items: center;
       gap: 6px;
       font-size: 0.8125rem;
-      color: rgba(255,255,255,0.8);
-      svg { color: rgba(255,255,255,0.7); }
+      color: var(--text-muted);
+      svg { color: var(--primary); }
     }
 
     /* Hero Visual */
@@ -521,7 +498,7 @@ import { RouterModule } from '@angular/router';
       width: 400px;
       height: 400px;
       border-radius: 50%;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(147,197,253,0.15));
+      background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(147,197,253,0.08));
       filter: blur(60px);
       top: -10%;
       right: -10%;
@@ -531,8 +508,8 @@ import { RouterModule } from '@angular/router';
       z-index: 2;
       overflow: hidden;
       border-radius: 20px;
-      border: 2px solid rgba(255,255,255,0.15);
-      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.1);
       max-width: 420px;
       width: 100%;
     }
@@ -554,40 +531,8 @@ import { RouterModule } from '@angular/router';
       right: 0;
       background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
       padding: 2rem 1.5rem 1.5rem;
-      h3 { font-size: 1.125rem; font-weight: 700; }
-      p { font-size: 0.8125rem; opacity: 0.85; margin-top: 4px; }
-    }
-
-    .hero-float-card {
-      position: absolute;
-      bottom: -16px;
-      left: -16px;
-      z-index: 10;
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 18px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: float 4s ease-in-out infinite;
-    }
-    .float-card-icon {
-      background: #dcfce7;
-      border-radius: 50%;
-      padding: 8px;
-      display: flex;
-      svg { color: #16a34a; }
-    }
-    .float-card-title {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--text-dark);
-    }
-    .float-card-sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 2px;
+      h3 { font-size: 1.125rem; font-weight: 700; color: #fff; }
+      p { font-size: 0.8125rem; opacity: 0.85; margin-top: 4px; color: #fff; }
     }
 
     /* ==================== SERVICES ==================== */
@@ -619,7 +564,6 @@ import { RouterModule } from '@angular/router';
     .service-icon {
       width: 52px;
       height: 52px;
-      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -689,50 +633,6 @@ import { RouterModule } from '@angular/router';
       text-decoration: none;
       transition: all 0.2s ease;
       &:hover { background: var(--primary-bg); border-color: var(--primary); }
-    }
-
-    /* ==================== STATS ==================== */
-    .stats {
-      background: var(--primary-bg);
-      padding: 5rem 0;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2rem;
-    }
-    .stat-card {
-      text-align: center;
-      background: #fff;
-      border-radius: var(--radius);
-      padding: 2rem 1.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-      opacity: 0;
-      &.visible { animation: fadeInUp 0.5s ease forwards; }
-    }
-    .stat-icon {
-      display: inline-flex;
-      background: var(--primary-bg);
-      border-radius: 50%;
-      padding: 14px;
-      margin-bottom: 1rem;
-      svg { color: var(--primary); }
-    }
-    .stat-value {
-      font-size: 2.25rem;
-      font-weight: 800;
-      color: var(--primary);
-      margin-bottom: 0.25rem;
-    }
-    .stat-label-text {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 0.25rem;
-    }
-    .stat-desc {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
     }
 
     /* ==================== APPOINTMENT ==================== */
@@ -875,8 +775,13 @@ import { RouterModule } from '@angular/router';
         .city-arrow { opacity: 1; transform: translateX(0); }
       }
     }
-    .city-left { display: flex; align-items: center; gap: 0.625rem; }
-    .city-emoji { font-size: 1.5rem; }
+    .city-left { display: flex; align-items: center; gap: 0.75rem; }
+    .city-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
     .city-name { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
     .city-right { display: flex; align-items: center; gap: 0.75rem; }
     .city-count {
@@ -1030,7 +935,7 @@ import { RouterModule } from '@angular/router';
       .hero-visual { display: none; }
       .services-grid { grid-template-columns: repeat(2, 1fr); }
       .doctors-grid { grid-template-columns: repeat(2, 1fr); }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
       .appointment-grid { grid-template-columns: 1fr; }
       .appointment-left { text-align: center; }
       .appointment-subtitle { margin: 0 auto 2rem !important; }
@@ -1048,7 +953,7 @@ import { RouterModule } from '@angular/router';
       .hero-badges { flex-direction: column; align-items: center; gap: 0.75rem; }
       .services-grid { grid-template-columns: 1fr; }
       .doctors-grid { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: 1fr; }
+
       .cities-grid { grid-template-columns: 1fr; }
       .section-header h2 { font-size: 1.75rem; }
       .cta-content h2 { font-size: 1.75rem; }
@@ -1061,88 +966,92 @@ import { RouterModule } from '@angular/router';
 export class HomeComponent implements OnInit, AfterViewInit {
   @ViewChild('servicesRef') servicesRef!: ElementRef;
   @ViewChild('doctorsRef') doctorsRef!: ElementRef;
-  @ViewChild('statsRef') statsRef!: ElementRef;
   @ViewChild('appointmentRef') appointmentRef!: ElementRef;
   @ViewChild('citiesRef') citiesRef!: ElementRef;
 
   heroVisible = signal(false);
   servicesVisible = signal(false);
   doctorsVisible = signal(false);
-  statsVisible = signal(false);
   appointmentVisible = signal(false);
   citiesVisible = signal(false);
+
+  constructor(private sanitizer: DomSanitizer) {}
+
+  trustHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
 
   services = [
     {
       title: 'Cardiologie',
       description: 'Soins cardiaques complets avec diagnostic et traitements de pointe.',
-      color: '#dc2626',
-      bgColor: '#fef2f2',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>'
     },
     {
       title: 'Dermatologie',
       description: 'Soins sp\u00e9cialis\u00e9s de la peau, dermatologie esth\u00e9tique et m\u00e9dicale.',
-      color: '#7c3aed',
-      bgColor: '#f5f3ff',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>'
     },
     {
       title: 'M\u00e9decine g\u00e9n\u00e9rale',
       description: 'Consultations de m\u00e9decine de famille pour tous les \u00e2ges.',
-      color: '#1E6FD9',
-      bgColor: '#EAF2FD',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>'
     },
     {
       title: 'P\u00e9diatrie',
       description: 'Soins sp\u00e9cialis\u00e9s pour nourrissons, enfants et adolescents.',
-      color: '#ec4899',
-      bgColor: '#fdf2f8',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 1.5-2 1.5c-2.5 0-3.2 2-3.2 2s1.5-1.5 2.5-1.5c1.6 0 2.5.5 3.2 1.2z"/></svg>'
     },
     {
       title: 'Chirurgie',
       description: 'Chirurgie g\u00e9n\u00e9rale et digestive avec suivi post-op\u00e9ratoire.',
-      color: '#f59e0b',
-      bgColor: '#fffbeb',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>'
     },
     {
       title: 'Laboratoire',
       description: 'Analyses biologiques et diagnostics avec technologie de pointe.',
-      color: '#0891b2',
-      bgColor: '#ecfeff',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>'
     },
     {
       title: 'Ophtalmologie',
       description: 'Soins oculaires complets et services de vision.',
-      color: '#06b6d4',
-      bgColor: '#ecfeff',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>'
     },
     {
       title: 'Urgences',
       description: 'Services m\u00e9dicaux d\'urgence 24h/24, 7j/7.',
-      color: '#16a34a',
-      bgColor: '#f0fdf4',
-      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>'
+      color: '#2563eb',
+      bgColor: 'transparent',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10H6"/><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.685-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/><path d="M8 8v4"/><circle cx="17" cy="18" r="2"/><circle cx="5" cy="18" r="2"/></svg>'
     }
   ];
 
   doctors = [
     {
       image: 'assets/images/doctor1.png',
-      name: 'Dr. Karim Benali',
-      specialty: 'M\u00e9decine G\u00e9n\u00e9rale',
-      description: 'M\u00e9decin g\u00e9n\u00e9raliste exp\u00e9riment\u00e9 avec 15 ans d\'exp\u00e9rience en diagnostic et suivi patient.'
-    },
-    {
-      image: 'assets/images/doctor2.png',
       name: 'Dr. Fatima El Khaldi',
       specialty: 'Cardiologie',
       description: 'Cardiologue sp\u00e9cialis\u00e9e en cardiologie interventionnelle et suivi des pathologies cardiaques.'
+    },
+    {
+      image: 'assets/images/doctor2.png',
+      name: 'Dr. Karim Benali',
+      specialty: 'M\u00e9decine G\u00e9n\u00e9rale',
+      description: 'M\u00e9decin g\u00e9n\u00e9raliste exp\u00e9riment\u00e9 avec 15 ans d\'exp\u00e9rience en diagnostic et suivi patient.'
     },
     {
       image: 'assets/images/medical-team.png',
@@ -1152,40 +1061,13 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   ];
 
-  stats = [
-    {
-      value: '5 000+',
-      label: 'Patients suivis',
-      description: 'Annuellement dans nos \u00e9tablissements',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
-    },
-    {
-      value: '6',
-      label: 'Sp\u00e9cialit\u00e9s',
-      description: 'Couvrant les principaux domaines m\u00e9dicaux',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>'
-    },
-    {
-      value: '50+',
-      label: 'M\u00e9decins experts',
-      description: 'Sp\u00e9cialistes certifi\u00e9s et exp\u00e9riment\u00e9s',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>'
-    },
-    {
-      value: '98%',
-      label: 'Satisfaction patients',
-      description: 'D\'apr\u00e8s les enqu\u00eates de satisfaction',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg>'
-    }
-  ];
-
   cities = [
-    { name: 'Casablanca', emoji: '\ud83c\udfd9\ufe0f', count: 25 },
-    { name: 'Rabat', emoji: '\ud83c\udfdb\ufe0f', count: 18 },
-    { name: 'Marrakech', emoji: '\ud83c\udf34', count: 15 },
-    { name: 'F\u00e8s', emoji: '\ud83d\udd4c', count: 12 },
-    { name: 'Tanger', emoji: '\ud83c\udf0a', count: 10 },
-    { name: 'Agadir', emoji: '\ud83c\udfd6\ufe0f', count: 8 }
+    { name: 'Casablanca', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>', count: 25 },
+    { name: 'Rabat', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 20 7 4 7"/><path d="M22 22H2"/><path d="M6 7v9"/><path d="M10 7v9"/><path d="M14 7v9"/><path d="M18 7v9"/><path d="M4 16h16"/></svg>', count: 18 },
+    { name: 'Marrakech', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>', count: 15 },
+    { name: 'F\u00e8s', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 20v-6a2 2 0 0 0-2-2h-3.83a2 2 0 0 1-1.41-.59L12 9l-2.76 2.41a2 2 0 0 1-1.41.59H4a2 2 0 0 0-2 2v6"/><path d="M2 20h20"/><path d="M10 20v-4a2 2 0 0 1 4 0v4"/><path d="M2 14h20"/><path d="M6 10V4h12v6"/></svg>', count: 12 },
+    { name: 'Tanger', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>', count: 10 },
+    { name: 'Agadir', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 1 0 0-20 0Z"/><path d="M12 12v8"/><path d="M12 2v10"/><path d="m9.1 5.5 5.8 6.5"/><path d="m14.9 5.5-5.8 6.5"/><path d="M8 20h8"/></svg>', count: 8 }
   ];
 
   ngOnInit() {
@@ -1195,7 +1077,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.observe(this.servicesRef, this.servicesVisible);
     this.observe(this.doctorsRef, this.doctorsVisible);
-    this.observe(this.statsRef, this.statsVisible);
+
     this.observe(this.appointmentRef, this.appointmentVisible);
     this.observe(this.citiesRef, this.citiesVisible);
   }

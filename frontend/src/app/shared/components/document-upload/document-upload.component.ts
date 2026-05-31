@@ -484,14 +484,30 @@ export class DocumentUploadComponent {
         }
       },
       error: (err) => {
-        this.error = 'Erreur lors du telechargement. Veuillez reessayer.';
+        console.error('Upload error:', err);
+        const msg = err?.error?.message || err?.message || '';
+        this.error = msg ? `Erreur: ${msg}` : 'Erreur lors du telechargement. Veuillez reessayer.';
         this.isUploading = false;
       }
     });
   }
 
   downloadDocument(doc: UploadedDocument): void {
-    window.open(`${environment.apiUrl}/patient/documents/${doc.id}/download`, '_blank');
+    this.http.get(`${environment.apiUrl}/patient/documents/${doc.id}/download`, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.originalName || doc.filename || 'document';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.error = 'Erreur lors du telechargement du document.';
+      }
+    });
   }
 
   deleteDocument(doc: UploadedDocument): void {
