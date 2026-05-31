@@ -97,9 +97,9 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen>
         title: const Text('Mon dossier médical'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.primary.withOpacity(0.5),
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(text: 'Consultations'),
             Tab(text: 'Ordonnances'),

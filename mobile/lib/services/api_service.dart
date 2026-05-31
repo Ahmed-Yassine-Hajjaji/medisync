@@ -461,9 +461,9 @@ class ApiService {
 
   Future<void> createMedecin(Map<String, dynamic> data, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/admin/medecins'),
+      Uri.parse('$baseUrl/admin/medecins?password=${Uri.encodeComponent(password)}'),
       headers: authService.authHeaders,
-      body: jsonEncode({...data, 'password': password}),
+      body: jsonEncode(data),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Erreur creation medecin');
@@ -472,9 +472,9 @@ class ApiService {
 
   Future<void> createSecretaire(Map<String, dynamic> data, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/admin/secretaires'),
+      Uri.parse('$baseUrl/admin/secretaires?password=${Uri.encodeComponent(password)}'),
       headers: authService.authHeaders,
-      body: jsonEncode({...data, 'password': password}),
+      body: jsonEncode(data),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Erreur creation secretaire');
@@ -483,9 +483,8 @@ class ApiService {
 
   Future<void> toggleUserStatus(int id, bool enabled) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/admin/users/$id/toggle-status'),
+      Uri.parse('$baseUrl/admin/users/$id/toggle-status?enabled=$enabled'),
       headers: authService.authHeaders,
-      body: jsonEncode({'enabled': enabled}),
     );
     if (response.statusCode != 200) throw Exception('Erreur changement statut');
   }
@@ -504,22 +503,45 @@ class ApiService {
 
   Future<Map<String, dynamic>> getFinancialReport(String startDate, String endDate) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/admin/financial-report?startDate=$startDate&endDate=$endDate'),
+      Uri.parse('$baseUrl/admin/financial/stats?start=$startDate&end=$endDate'),
       headers: authService.authHeaders,
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
     return {};
   }
 
-  Future<List<Map<String, dynamic>>> getAuditLogs() async {
+  Future<List<Map<String, dynamic>>> getRevenueByMonth(String startDate, String endDate) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/admin/audit-logs'),
+      Uri.parse('$baseUrl/admin/financial/revenue-by-month?start=$startDate&end=$endDate'),
       headers: authService.authHeaders,
     );
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(jsonDecode(response.body));
     }
     return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getAuditLogs() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/audit'),
+      headers: authService.authHeaders,
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+    throw Exception('Erreur chargement audit logs: ${response.statusCode}');
+  }
+
+  Future<List<User>> getAdminSecretaires() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/secretaires'),
+      headers: authService.authHeaders,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromJson(json)).toList();
+    }
+    throw Exception('Erreur chargement secretaires');
   }
 
   Future<List<Appointment>> getAppointmentsByMedecinAndDate(int medecinId, String date) async {

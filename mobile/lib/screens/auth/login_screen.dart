@@ -29,8 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _login({String? totpCode}) async {
+    if (totpCode == null && !_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
@@ -38,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await auth.login(
         _emailController.text.trim(),
         _passwordController.text,
+        totpCode: totpCode,
       );
 
       if (mounted) {
@@ -48,10 +49,97 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      if (mounted) ErrorHandler.showError(context, e);
+      if (mounted) {
+        if (e.toString().contains('2FA_REQUIRED')) {
+          setState(() => _isLoading = false);
+          _show2FADialog();
+          return;
+        }
+        ErrorHandler.showError(context, e);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _show2FADialog() {
+    final otpController = TextEditingController();
+    bool isVerifying = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.security, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text('Verification 2FA'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Entrez le code a 6 chiffres de votre application d\'authentification.',
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                textAlign: TextAlign.center,
+                autofocus: true,
+                style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  counterText: '',
+                  hintText: '000000',
+                  hintStyle: TextStyle(color: Colors.grey.shade300, fontSize: 24, letterSpacing: 8),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                ),
+                onSubmitted: (_) async {
+                  if (otpController.text.length == 6 && !isVerifying) {
+                    setDialogState(() => isVerifying = true);
+                    Navigator.pop(ctx);
+                    _login(totpCode: otpController.text);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isVerifying ? null : () => Navigator.pop(ctx),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: isVerifying
+                  ? null
+                  : () {
+                      if (otpController.text.length == 6) {
+                        setDialogState(() => isVerifying = true);
+                        Navigator.pop(ctx);
+                        _login(totpCode: otpController.text);
+                      }
+                    },
+              child: isVerifying
+                  ? const SizedBox(
+                      height: 18, width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Verifier'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loginWithGoogle() async {

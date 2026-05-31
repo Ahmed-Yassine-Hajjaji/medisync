@@ -314,10 +314,12 @@ export class StaffManagementComponent implements OnInit {
   }
 
   toggleStatus(member: StaffMember): void {
-    const endpoint = this.activeTab === 'medecins' ? 'medecins' : 'secretaires';
-    this.http.patch(`${environment.apiUrl}/admin/${endpoint}/${member.id}/toggle-status`, {}).subscribe({
+    const newStatus = !member.enabled;
+    this.http.put(`${environment.apiUrl}/admin/users/${member.id}/toggle-status`, null, {
+      params: { enabled: newStatus.toString() }
+    }).subscribe({
       next: () => {
-        member.enabled = !member.enabled;
+        member.enabled = newStatus;
       }
     });
   }

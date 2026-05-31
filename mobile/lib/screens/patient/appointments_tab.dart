@@ -124,9 +124,9 @@ class _AppointmentsTabState extends State<AppointmentsTab>
         title: const Text('Mes rendez-vous'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.primary.withOpacity(0.5),
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: [
             Tab(
               child: Row(

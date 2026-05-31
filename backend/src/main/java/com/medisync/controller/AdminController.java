@@ -47,6 +47,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.createMedecin(dto, password));
     }
 
+    @GetMapping("/secretaires")
+    public ResponseEntity<List<UserDTO>> getAllSecretaires() {
+        return ResponseEntity.ok(adminService.getAllSecretaires());
+    }
+
     @PostMapping("/secretaires")
     public ResponseEntity<UserDTO> createSecretaire(
             @RequestBody UserDTO dto,

@@ -106,6 +106,12 @@ public class AdminService {
         return toUserDTO(secretaire);
     }
 
+    public List<UserDTO> getAllSecretaires() {
+        return secretaireRepository.findAll().stream()
+                .map(s -> toUserDTO(s))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     @Transactional
     public CliniqueDTO createClinique(CliniqueDTO dto) {
         Clinique clinique = new Clinique();

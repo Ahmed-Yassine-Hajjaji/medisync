@@ -55,18 +55,12 @@ class _StaffManagementState extends State<StaffManagement>
       final api = ApiService(context.read<AuthService>());
       final results = await Future.wait([
         api.getAdminMedecins(),
-        // Secretaires are fetched via patient endpoint substitute; adapt if backend adds dedicated route.
-        api.getAdminPatients(),
+        api.getAdminSecretaires(),
       ]);
       if (!mounted) return;
       setState(() {
         _medecins = (results[0] as List).cast<Medecin>();
-        // Filter secretaires from admin patients list (role-based)
-        // In practice the backend may have a dedicated /admin/secretaires endpoint.
-        _secretaires = (results[1] as List)
-            .cast<User>()
-            .where((u) => u.role == 'SECRETAIRE')
-            .toList();
+        _secretaires = (results[1] as List).cast<User>();
         _loading = false;
       });
     } catch (e) {

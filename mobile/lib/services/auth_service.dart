@@ -28,16 +28,27 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String email, String password) async {
+  /// Returns true if login succeeded, throws '2FA_REQUIRED' if TOTP is needed.
+  Future<bool> login(String email, String password, {String? totpCode}) async {
     try {
+      final body = <String, dynamic>{'email': email, 'password': password};
+      if (totpCode != null && totpCode.isNotEmpty) {
+        body['totpCode'] = totpCode;
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
+        if (data['requiresTwoFactor'] == true) {
+          throw Exception('2FA_REQUIRED');
+        }
+
         _user = User.fromJson(data);
 
         final prefs = await SharedPreferences.getInstance();
@@ -48,6 +59,7 @@ class AuthService extends ChangeNotifier {
       }
       return false;
     } catch (e) {
+      if (e is Exception && e.toString().contains('2FA_REQUIRED')) rethrow;
       debugPrint('Login error: $e');
       return false;
     }

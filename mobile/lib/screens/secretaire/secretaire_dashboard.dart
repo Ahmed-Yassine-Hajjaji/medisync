@@ -6,6 +6,8 @@ import '../../services/api_service.dart';
 import '../../models/user.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import 'secretaire_appointments.dart';
+import 'secretaire_patients.dart';
 
 class SecretaireDashboard extends StatefulWidget {
   const SecretaireDashboard({super.key});
@@ -432,8 +434,10 @@ class _SecretaireDashboardState extends State<SecretaireDashboard> {
             icon: const Icon(Icons.add),
             label: const Text('Nouveau RDV'),
             onPressed: () {
-              // Navigate to RDV tab (index 2) via scaffold
-              // Parents can listen; use a simple push for now
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SecretaireAppointments()),
+              );
             },
           ),
         ),
@@ -443,7 +447,10 @@ class _SecretaireDashboardState extends State<SecretaireDashboard> {
             icon: const Icon(Icons.person_add_outlined),
             label: const Text('Nouveau patient'),
             onPressed: () {
-              // Navigate to Patients tab (index 3)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SecretairePatients()),
+              );
             },
           ),
         ),

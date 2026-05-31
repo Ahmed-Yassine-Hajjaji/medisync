@@ -193,7 +193,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             TextButton.icon(
               onPressed: () {
-                // Navigate to staff management
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StaffManagement()),
+                ).then((_) => _load());
               },
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Ajouter'),

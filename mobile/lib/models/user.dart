@@ -252,8 +252,8 @@ class DashboardStats {
     return DashboardStats(
       totalPatients: json['totalPatients'] ?? 0,
       totalMedecins: json['totalMedecins'] ?? 0,
-      rdvAujourdhui: json['rdvAujourdhui'] ?? 0,
-      revenusMois: (json['revenusMois'] ?? 0).toDouble(),
+      rdvAujourdhui: json['totalAppointmentsToday'] ?? json['rdvAujourdhui'] ?? 0,
+      revenusMois: (json['revenueMonth'] ?? json['revenusMois'] ?? 0).toDouble(),
     );
   }
 }
