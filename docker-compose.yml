@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    container_name: medisync-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - FIREBASE_SERVICE_ACCOUNT_PATH=/app/firebase-service-account.json
+    volumes:
+      - ./backend/firebase-service-account.json:/app/firebase-service-account.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/swagger-ui.html || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    build: ./frontend
+    container_name: medisync-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

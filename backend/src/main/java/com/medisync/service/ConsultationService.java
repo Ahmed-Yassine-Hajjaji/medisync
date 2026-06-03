@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,19 +21,23 @@ public class ConsultationService {
     private final PatientRepository patientRepository;
     private final MedecinRepository medecinRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final InvoiceRepository invoiceRepository;
 
+    @Transactional(readOnly = true)
     public List<ConsultationDTO> getConsultationsByPatient(Long patientId) {
         return consultationRepository.findByPatientId(patientId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ConsultationDTO> getConsultationsByMedecin(Long medecinId) {
         return consultationRepository.findByMedecinId(medecinId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ConsultationDTO getConsultationById(Long id) {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Consultation non trouvee"));
@@ -58,6 +63,16 @@ public class ConsultationService {
 
         appointment.setStatut(StatutAppointment.TERMINE);
         appointmentRepository.save(appointment);
+
+        // Auto-generate invoice with doctor's consultation fee
+        Medecin medecin = appointment.getMedecin();
+        Invoice invoice = new Invoice();
+        invoice.setConsultation(consultation);
+        invoice.setPatient(appointment.getPatient());
+        invoice.setMontantTotal(medecin.getTarifConsultation());
+        invoice.setActes("Consultation medicale");
+        invoice.setDateEcheance(LocalDate.now().plusDays(30));
+        invoiceRepository.save(invoice);
 
         return toDTO(consultation);
     }

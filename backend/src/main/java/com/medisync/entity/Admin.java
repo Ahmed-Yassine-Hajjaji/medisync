@@ -15,9 +15,4 @@ public class Admin extends User {
     @JoinColumn(name = "clinique_id")
     private Clinique clinique;
 
-    @PrePersist
-    @PreUpdate
-    private void setTwoFactorRequired() {
-        setTwoFactorEnabled(true);
-    }
 }

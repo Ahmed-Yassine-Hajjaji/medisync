@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -105,20 +105,26 @@ interface TwoFactorSetup {
 
                 <div class="auth-apps">
                   <div class="auth-app">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Google_Authenticator.svg/96px-Google_Authenticator.svg.png" alt="Google Authenticator">
+                    <div class="app-icon" style="background:#4285F4;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
                     <span>Google Authenticator</span>
                   </div>
                   <div class="auth-app">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Microsoft_Authenticator_icon.svg/96px-Microsoft_Authenticator_icon.svg.png" alt="Microsoft Authenticator">
+                    <div class="app-icon" style="background:#00BCF2;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
                     <span>Microsoft Authenticator</span>
                   </div>
                   <div class="auth-app">
-                    <img src="https://authy.com/wp-content/uploads/Authy-App-Icon.svg" alt="Authy">
+                    <div class="app-icon" style="background:#EC1C24;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                    </div>
                     <span>Authy</span>
                   </div>
                 </div>
 
-                <button class="btn-primary" (click)="setupStep = 2">Suivant</button>
+                <button class="btn-primary" (click)="goToStep(2)">Suivant</button>
               </div>
             }
 
@@ -143,7 +149,7 @@ interface TwoFactorSetup {
 
                 <div class="step-actions">
                   <button class="btn-secondary" (click)="setupStep = 1">Retour</button>
-                  <button class="btn-primary" (click)="setupStep = 3">Suivant</button>
+                  <button class="btn-primary" (click)="goToStep(3)">Suivant</button>
                 </div>
               </div>
             }
@@ -250,7 +256,7 @@ interface TwoFactorSetup {
     .step-header h3 { margin: 0; }
     .auth-apps { display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap; }
     .auth-app { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: #f5f5f5; border-radius: 12px; width: 120px; }
-    .auth-app img { width: 48px; height: 48px; }
+    .app-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
     .auth-app span { font-size: 12px; text-align: center; }
     .qr-container { display: flex; justify-content: center; margin: 24px 0; }
     .qr-container canvas { border: 1px solid #ddd; border-radius: 12px; padding: 16px; background: white; }
@@ -268,7 +274,9 @@ interface TwoFactorSetup {
     .step-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
   `]
 })
-export class TwoFactorSetupComponent implements OnInit {
+export class TwoFactorSetupComponent implements OnInit, AfterViewChecked {
+  @ViewChild('qrCanvas') qrCanvas!: ElementRef<HTMLCanvasElement>;
+
   is2FAEnabled = false;
   isLoading = true;
   showSetup = false;
@@ -283,10 +291,22 @@ export class TwoFactorSetupComponent implements OnInit {
   showBackupCodes = false;
   recentActivity: any[] = [];
 
+  private qrRendered = false;
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadStatus();
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.setupStep === 2 && this.setupData?.qrCodeUrl && this.qrCanvas && !this.qrRendered) {
+      this.qrRendered = true;
+      QRCode.toCanvas(this.qrCanvas.nativeElement, this.setupData.qrCodeUrl, {
+        width: 250,
+        margin: 2
+      });
+    }
   }
 
   loadStatus(): void {
@@ -310,6 +330,7 @@ export class TwoFactorSetupComponent implements OnInit {
           this.setupData = data;
           this.showSetup = true;
           this.setupStep = 1;
+          this.qrRendered = false;
         }
       });
   }
@@ -394,6 +415,13 @@ export class TwoFactorSetupComponent implements OnInit {
     a.download = 'medisync-backup-codes.txt';
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  goToStep(step: number): void {
+    this.setupStep = step;
+    if (step === 2) {
+      this.qrRendered = false;
+    }
   }
 
   copySecret(): void {

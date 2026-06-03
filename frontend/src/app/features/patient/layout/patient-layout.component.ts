@@ -20,6 +20,7 @@ export class PatientLayoutComponent {
     { route: '/patient/appointments',    label: 'Mes RDV',       icon: 'calendar' },
     { route: '/patient/medical-record',  label: 'Mon dossier',   icon: 'fileText' },
     { route: '/patient/prescriptions',   label: 'Ordonnances',   icon: 'prescription' },
+    { route: '/patient/invoices',        label: 'Mes factures',  icon: 'invoice' },
     { route: '/patient/profile',         label: 'Mon profil',    icon: 'user' },
   ];
 }

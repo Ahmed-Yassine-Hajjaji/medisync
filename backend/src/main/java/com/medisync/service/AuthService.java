@@ -77,7 +77,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
 
-        if (user.isTwoFactorEnabled()) {
+        if (user.isTwoFactorEnabled() && user.getTwoFactorSecret() != null) {
             if (request.getTotpCode() == null || request.getTotpCode().isEmpty()) {
                 return AuthResponse.builder()
                         .requiresTwoFactor(true)
@@ -169,6 +169,15 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
         user.setTwoFactorSecret(secret);
         user.setTwoFactorEnabled(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void disableTwoFactor(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouve"));
+        user.setTwoFactorSecret(null);
+        user.setTwoFactorEnabled(false);
         userRepository.save(user);
     }
 }

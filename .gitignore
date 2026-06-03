@@ -37,6 +37,9 @@ mobile/*.iml
 # Claude Code
 CLAUDE.md
 
+# Docs
+docs/
+
 # Environment & Secrets
 *.env
 *.env.*

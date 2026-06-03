@@ -19,6 +19,13 @@ public class SalleConsultation {
 
     private String numero;
 
+    @Enumerated(EnumType.STRING)
+    private TypeSalle type = TypeSalle.CONSULTATION;
+
+    private int etage = 0;
+
+    private int capacite = 1;
+
     private String equipements;
 
     private boolean disponible = true;
@@ -26,4 +33,8 @@ public class SalleConsultation {
     @ManyToOne
     @JoinColumn(name = "clinique_id")
     private Clinique clinique;
+
+    @ManyToOne
+    @JoinColumn(name = "medecin_id")
+    private Medecin medecinAssigne;
 }
